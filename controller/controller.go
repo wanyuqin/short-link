@@ -8,8 +8,12 @@ import (
 type Controller struct {
 }
 
-func (ctl *Controller) Response() {
-
+func (ctl *Controller) Response(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": data,
+		"msg":  "success",
+	})
 }
 
 func (ctl *Controller) Error(c *gin.Context, err error) {

@@ -1,11 +1,11 @@
 package request
 
-type Register struct {
+type RegisterReq struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type Login struct {
+type LoginReq struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }

@@ -15,15 +15,29 @@ func NewUserController() *UserController {
 }
 
 func (ctl *UserController) Register(c *gin.Context) {
-	var req request.Register
+	var req request.RegisterReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		ctl.Error(c, err)
 		return
 	}
-	services.NewUserService().Register(c.Request.Context(), &req)
+	err = services.NewUserService().Register(c.Request.Context(), &req)
+	if err != nil {
+		ctl.Error(c, err)
+		return
+	}
+	ctl.Response(c, gin.H{})
 }
 
 func (ctl *UserController) Login(c *gin.Context) {
+	var req request.LoginReq
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		ctl.Error(c, err)
+		return
+	}
+	err = services.NewUserService().Login(c.Request.Context(), &req)
+	if err != nil {
 
+	}
 }

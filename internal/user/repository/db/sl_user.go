@@ -42,23 +42,28 @@ func (m *SlUser) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-func (m *SlUserDao) Create(ctx context.Context, u SlUser) error {
+func (m *SlUserDao) Create(ctx context.Context, u *SlUser) error {
 	return m.db.Create(&u).Error
 }
 
-func (m *SlUserDao) GetByUname(ctx context.Context, uname string) (SlUser, error) {
+func (m *SlUserDao) GetByUname(ctx context.Context, uname string) (*SlUser, error) {
 	var u SlUser
 	err := m.db.Table((&SlUser{}).TableName()).Where("username = ?", uname).First(&u).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return u, nil
+			return nil, nil
 		}
 	}
-	return u, err
+	return &u, err
 }
 
-func (m *SlUserDao) GetByUnameAndPwd(ctx context.Context, uname string, pwd string) (SlUser, error) {
+func (m *SlUserDao) GetByUnameAndPwd(ctx context.Context, uname string, pwd string) (*SlUser, error) {
 	var u SlUser
 	err := m.db.Table((&SlUser{}).TableName()).Where("username = ? and password = ?", uname, pwd).First(&u).Error
-	return u, err
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+	}
+	return &u, err
 }
