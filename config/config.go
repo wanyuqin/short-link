@@ -38,7 +38,7 @@ type Mysql struct {
 	Dbname          string `yaml:"dbname"`
 	MaxIdleConns    int    `yaml:"maxIdleConns"`
 	MaxOpenConns    int    `yaml:"maxOpenConns"`
-	ConnMaxLifetime int    `yaml:"connMaxLifetime"`
+	ConnMaxLifetime int64  `yaml:"connMaxLifetime"`
 }
 
 type Redis struct {

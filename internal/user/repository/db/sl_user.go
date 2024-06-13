@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"gorm.io/gorm"
-	"short-link/internal/mysql"
+	"short-link/database/mysql"
 	"time"
 )
 
@@ -27,7 +27,7 @@ type SlUserDao struct {
 }
 
 func NewSlUserDao(ctx context.Context, db ...*gorm.DB) *SlUserDao {
-	client := mysql.NewClient(ctx)
+	client := mysql.NewDBClient(ctx)
 	if len(db) > 0 {
 		client = db[0]
 	}

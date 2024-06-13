@@ -12,6 +12,8 @@ import (
 	"os/signal"
 	"short-link/api"
 	"short-link/config"
+	"short-link/database/cache"
+	"short-link/database/mysql"
 	"time"
 )
 
@@ -22,6 +24,8 @@ var (
 		Use: "slink",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			config.InitializeConfig(cfgFile)
+			mysql.InitializeDBClient()
+			cache.InitializeRedisClient()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
