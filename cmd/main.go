@@ -21,7 +21,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use: "slink",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			config.Initialize(cfgFile)
+			config.InitializeConfig(cfgFile)
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {

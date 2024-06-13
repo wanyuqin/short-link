@@ -3,3 +3,19 @@ application:
   host: 127.0.0.1
   port: 8088
   mode: debug
+
+database:
+  mysql:
+    default:
+      host: "127.0.0.1"
+      port: 3306
+      dbname: "short_link"
+      user: "root"
+      password: "wanyuqin0531"
+      
+  redis:
+    default:
+      host: ""
+      port: 6379
+      db: 0
+      password: ""

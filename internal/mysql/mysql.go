@@ -11,7 +11,12 @@ import (
 )
 
 // TODO 改为配置
-func NewClient(ctx context.Context) *gorm.DB {
+
+func NewDBClient(ctx context.Context, key ...string) {
+
+}
+
+func NewClient(ctx context.Context, dbname ...string) *gorm.DB {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
@@ -30,4 +35,8 @@ func NewClient(ctx context.Context) *gorm.DB {
 		return nil
 	}
 	return db
+}
+
+func InitializeDBClient() {
+
 }

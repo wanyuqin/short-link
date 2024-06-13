@@ -15,6 +15,7 @@ var (
 
 type Config struct {
 	Application Application `yaml:"application"`
+	Database    Database    `yaml:"database"`
 }
 
 type Application struct {
@@ -24,7 +25,30 @@ type Application struct {
 	Mode        string `yaml:"mode"`
 }
 
-func Initialize(path string) {
+type Database struct {
+	Mysql map[string]Mysql `yaml:"mysql"`
+	Redis map[string]Redis `yaml:"redis"`
+}
+
+type Mysql struct {
+	Host            string `yaml:"host"`
+	Port            int    `yaml:"port"`
+	User            string `yaml:"user"`
+	Password        string `yaml:"password"`
+	Dbname          string `yaml:"dbname"`
+	MaxIdleConns    int    `yaml:"maxIdleConns"`
+	MaxOpenConns    int    `yaml:"maxOpenConns"`
+	ConnMaxLifetime int    `yaml:"connMaxLifetime"`
+}
+
+type Redis struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	DB       int    `yaml:"DB"`
+	Password string `yaml:"password"`
+}
+
+func InitializeConfig(path string) {
 	once.Do(func() {
 		_config = &Config{}
 	})
