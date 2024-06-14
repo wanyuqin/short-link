@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"short-link/database/mysql"
+	"time"
 )
 
 type SlOriginalShortUrl struct {
@@ -24,12 +25,26 @@ type SlOriginalShortUrlDao struct {
 	db *gorm.DB
 }
 
+func (m *SlOriginalShortUrl) BeforeCreate(tx *gorm.DB) (err error) {
+	m.CreatedAt = time.Now().UnixMilli()
+	m.UpdatedAt = time.Now().UnixMilli()
+	return
+}
+
 func NewSlOriginalShortUrlDao(ctx context.Context, db ...*gorm.DB) *SlOriginalShortUrlDao {
 	client := mysql.NewDBClient(ctx)
 	if len(db) > 0 {
 		client = db[0]
 	}
 	return &SlOriginalShortUrlDao{db: client}
+}
+
+func (m *SlOriginalShortUrlDao) Create(u *SlOriginalShortUrl, db ...*gorm.DB) error {
+	tx := m.db
+	if len(db) > 0 {
+		tx = db[0]
+	}
+	return tx.Create(&u).Error
 }
 
 func (m *SlOriginalShortUrlDao) GetByOriginalUrl(originalUrl string) (*SlOriginalShortUrl, error) {

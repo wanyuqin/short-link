@@ -6,14 +6,17 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
-	"short-link/api"
+	"short-link/api/admin"
+	"short-link/api/app"
+	"short-link/api/middleware"
 	"short-link/config"
 	"short-link/database/cache"
 	"short-link/database/mysql"
+	"short-link/logs"
 	"time"
 )
 
@@ -26,10 +29,28 @@ var (
 			config.InitializeConfig(cfgFile)
 			mysql.InitializeDBClient()
 			cache.InitializeRedisClient()
+			logs.InitializeLogger()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			startHttpServer()
+			adminServer := startAdminHttpServer()
+			appServer := startHttpServer()
+
+			// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
+			quit := make(chan os.Signal, 1)
+			signal.Notify(quit, os.Interrupt)
+			<-quit
+			logs.Info("Shutdown App Server ...")
+
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := adminServer.Shutdown(ctx); err != nil {
+				logs.Fatal("App Server Shutdown:", zap.Any("err", err))
+			}
+			logs.Info("Server exiting")
+			if err := appServer.Shutdown(ctx); err != nil {
+				logs.Fatal("App Server Shutdown:", zap.Any("err", err))
+			}
 		},
 	}
 )
@@ -45,45 +66,52 @@ func main() {
 	}
 }
 
-func startHttpServer() {
-	cfg := config.GetConfig()
+func startAdminHttpServer() *http.Server {
+	cfg := config.GetConfig().GetHttpConfig("admin")
 	engine := gin.Default()
 
-	gin.SetMode(cfg.Application.Mode)
-	engine.Use(exceptionMiddleware)
+	gin.SetMode(cfg.Mode)
+	engine.Use(middleware.GinLogger(), middleware.GinRecovery(true))
 
-	rootGroup := engine.Group(cfg.Application.ContextPath)
-	api.NewRouter(rootGroup)
+	rootGroup := engine.Group(cfg.ContextPath)
+	admin.NewRouter(rootGroup)
 
+	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port),
+		Addr:    addr,
 		Handler: engine,
 	}
 
 	go func() {
+		logs.Info("admin http server start", zap.Any("addr", addr))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %s\n", err)
+			logs.Fatal("listen: %s\n", zap.Any("err", err))
 		}
 	}()
-	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	log.Println("Shutdown Server ...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
-	}
-	log.Println("Server exiting")
+	return srv
 }
 
-func exceptionMiddleware(c *gin.Context) {
-	defer func() {
-		if err := recover(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": "服务器发生内部错误"})
+func startHttpServer() *http.Server {
+	cfg := config.GetConfig().GetHttpConfig("app")
+	engine := gin.Default()
+
+	gin.SetMode(cfg.Mode)
+	engine.Use(middleware.GinLogger(), middleware.GinRecovery(true))
+
+	rootGroup := engine.Group(cfg.ContextPath)
+	app.NewRouter(rootGroup)
+	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: engine,
+	}
+
+	go func() {
+		logs.Info("app http server start", zap.Any("addr", addr))
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logs.Fatal("listen: %s\n", zap.Any("err", err))
 		}
 	}()
-	c.Next()
+	return srv
+
 }

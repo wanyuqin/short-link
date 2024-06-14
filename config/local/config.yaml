@@ -1,9 +1,19 @@
 application:
-  contextPath: /short-link
-  host: 127.0.0.1
-  port: 8088
-  mode: debug
-
+  http:
+    admin:
+      contextPath: /short-link
+      host: 127.0.0.1
+      port: 8088
+      mode: debug
+    app:
+      contextPath: /
+      host: 127.0.0.1
+      port: 8081
+      mode: debug
+  logger:
+    level: debug
+    stdType: file
+    filePath: /Users/ethanleo/GolandProjects/short-link/log/app.log
 database:
   mysql:
     default:
@@ -12,7 +22,6 @@ database:
       dbname: "short_link"
       user: "root"
       password: "wanyuqin0531"
-      
   redis:
     default:
       host: ""

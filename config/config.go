@@ -19,10 +19,21 @@ type Config struct {
 }
 
 type Application struct {
-	ContextPath string `yaml:"contextPath"`
-	Host        string `yaml:"host"`
-	Port        int    `yaml:"port"`
-	Mode        string `yaml:"mode"`
+	Http   map[string]HttpServer `yaml:"http"`
+	Logger Logger                `yaml:"logger"`
+}
+
+type Logger struct {
+	Level    string `yaml:"level"`
+	StdType  string `yaml:"stdType"`
+	FilePath string `yaml:"filePath"`
+}
+
+type HttpServer struct {
+	Host        string
+	Port        int
+	Mode        string
+	ContextPath string
 }
 
 type Database struct {
@@ -63,6 +74,11 @@ func GetConfig() *Config {
 	}
 	return _config
 }
+
+func (cfg *Config) GetHttpConfig(key string) HttpServer {
+	return cfg.Application.Http[key]
+}
+
 func getLocalConfig() {
 	_, currentFile, _, _ := runtime.Caller(0)
 	basePath := filepath.Dir(currentFile)

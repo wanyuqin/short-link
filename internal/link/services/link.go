@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"errors"
-	"short-link/api/request"
+	"short-link/api/admin/request"
 	"short-link/internal/link/repository"
 	"short-link/internal/link/repository/db"
 	"short-link/utils"
@@ -32,8 +32,6 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		return errors.New("原始链接已经存在")
 	}
 	shortLink := utils.GenerateShortLink(req.OriginalUrl)
-
-	// 碰撞校验
 
 	// 保存
 	err = svc.linkRepo.AddLink(ctx, &db.SlLink{

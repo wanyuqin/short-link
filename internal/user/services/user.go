@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
-	"short-link/api/request"
+	"short-link/api/admin/request"
 	"short-link/internal/user/domain"
 	"short-link/internal/user/repository"
 	"short-link/internal/user/repository/db"

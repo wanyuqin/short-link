@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"short-link/api/request"
+	"short-link/api/admin/request"
 	"short-link/internal/user/services"
 )
 

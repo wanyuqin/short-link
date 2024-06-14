@@ -52,8 +52,12 @@ func (m *SlLink) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-func (m *SlLinkDao) Create(l *SlLink) error {
-	return m.db.Table((&SlLink{}).TableName(l.ShortUrl)).Create(l).Error
+func (m *SlLinkDao) Create(l *SlLink, db ...*gorm.DB) error {
+	tx := m.db
+	if len(db) > 0 {
+		tx = db[0]
+	}
+	return tx.Table((&SlLink{}).TableName(l.ShortUrl)).Create(l).Error
 }
 
 func (m *SlLinkDao) GetByOriginUrl(originUrl string) (*SlLink, error) {
