@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -16,6 +18,8 @@ import (
 	"short-link/config"
 	"short-link/database/cache"
 	"short-link/database/mysql"
+	"short-link/docs"
+	_ "short-link/docs"
 	"short-link/logs"
 	"time"
 )
@@ -59,7 +63,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "set config")
 }
 
-func main() {
+func Start() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -82,6 +86,8 @@ func startAdminHttpServer() *http.Server {
 		Handler: engine,
 	}
 
+	docs.SwaggerInfo.BasePath = cfg.ContextPath
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	go func() {
 		logs.Info("admin http server start", zap.Any("addr", addr))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

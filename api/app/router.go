@@ -7,5 +7,5 @@ import (
 
 func NewRouter(rg *gin.RouterGroup) {
 	linkController := controller.NewLinkController()
-	rg.GET("/", linkController.Request)
+	rg.GET("/:short-link", linkController.Request)
 }

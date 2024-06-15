@@ -3,9 +3,11 @@ package services
 import (
 	"context"
 	"errors"
+	"go.uber.org/zap"
 	"short-link/api/admin/request"
 	"short-link/internal/link/repository"
 	"short-link/internal/link/repository/db"
+	"short-link/logs"
 	"short-link/utils"
 )
 
@@ -41,4 +43,22 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		UserId:    req.UserId,
 	})
 	return err
+}
+
+func (svc *LinkService) Request(ctx context.Context, shortLink string) (string, error) {
+
+	//rdb := cache.NewRedisTool(ctx)
+	//rdb.AutoFetch(ctx,)
+	short, err := svc.linkRepo.GetByShort(ctx, shortLink)
+	if err != nil {
+		logs.Error(err, "get by short link failed", zap.Any("shortLink", shortLink))
+		return "", err
+	}
+
+	if short == nil {
+		logs.Error(err, "get by short link not found", zap.Any("shortLink", shortLink))
+		return "", errors.New("record not found")
+	}
+
+	return short.OriginalUrl, nil
 }

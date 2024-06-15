@@ -5,7 +5,7 @@ import (
 )
 
 func NewRouter(engine *gin.RouterGroup) {
-	v1 := engine.Group("/v1")
+	v1 := engine.Group("/v1/admin")
 	NewUserRouter(v1)
 	NewLinkRouter(v1)
 }
