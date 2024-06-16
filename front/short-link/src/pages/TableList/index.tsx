@@ -105,7 +105,6 @@ const TableList: React.FC = () => {
    * @en-US International configuration
    * @zh-CN 国际化配置
    * */
-  const intl = useIntl();
 
   const columns: ProColumns<API.RuleListItem>[] = [
     {

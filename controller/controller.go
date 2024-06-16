@@ -42,3 +42,8 @@ func (ctl *Controller) Redirect(c *gin.Context, url string) {
 	c.Redirect(http.StatusFound, url)
 	c.Abort()
 }
+
+type UserToken struct {
+	Id       uint64 `json:"id"`
+	Username string `json:"username"`
+}

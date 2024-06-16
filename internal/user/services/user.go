@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"errors"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"short-link/api/admin/request"
 	"short-link/internal/user/domain"
 	"short-link/internal/user/repository"
 	"short-link/internal/user/repository/db"
+	"short-link/logs"
 )
 
 type UserService struct {
@@ -52,16 +54,21 @@ func (svc *UserService) Register(ctx context.Context, req *request.RegisterReq) 
 	return err
 }
 
-func (svc *UserService) Login(ctx context.Context, req *request.LoginReq) error {
+func (svc *UserService) Login(ctx context.Context, req *request.LoginReq) (*db.SlUser, error) {
 	userModel, err := svc.userRepository.GetByUname(ctx, req.Username)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if userModel == nil {
-		return errors.New("user not found")
+		logs.Error(err, "[UserService][Login] user not found", zap.Any("username", req.Username))
+		return nil, errors.New("user not found")
 	}
 	if err = bcrypt.CompareHashAndPassword([]byte(userModel.Password), []byte(req.Password)); err != nil {
-		return err
+		logs.Error(err, "[UserService][Login] compare password failed",
+			zap.Any("reqPassword", req.Password),
+			zap.Any("password", userModel.Password))
+		return nil, errors.New("wrong password")
 	}
-	return nil
+
+	return userModel, err
 }

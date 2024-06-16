@@ -12,5 +12,6 @@ func NewUserRouter(rg *gin.RouterGroup) {
 	{
 		userGroup.POST("/register", usrController.Register)
 		userGroup.POST("/login", usrController.Login)
+		userGroup.GET("/current-user", usrController.CurrentUser)
 	}
 }

@@ -16,6 +16,7 @@ declare namespace API {
   };
 
   type deletePetParams = {
+    api_key?: string;
     /** Pet id to delete */
     petId: number;
   };

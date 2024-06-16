@@ -9,7 +9,7 @@ import (
 )
 
 type SlUser struct {
-	ID        int64  `gorm:"column:id;primary_key;AUTO_INCREMENT"`
+	ID        uint64 `gorm:"column:id;primary_key;AUTO_INCREMENT"`
 	Username  string `gorm:"column:username;NOT NULL"`             // 用户名
 	Password  string `gorm:"column:password;NOT NULL"`             // 密码
 	Salt      string `gorm:"column:salt;NOT NULL"`                 // 加密盐

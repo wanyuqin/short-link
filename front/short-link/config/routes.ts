@@ -29,6 +29,12 @@ export default [
     component: './Welcome',
   },
   {
+    path: '/link-list',
+    name: '链接列表',
+    icon: 'smile',
+    component: './LinkList',
+  },
+  {
     path: '/admin',
     name: 'admin',
     icon: 'crown',
@@ -45,12 +51,12 @@ export default [
       },
     ],
   },
-  {
-    name: 'list.table-list',
-    icon: 'table',
-    path: '/list',
-    component: './TableList',
-  },
+  // {
+  //   name: 'list.table-list',
+  //   icon: 'table',
+  //   path: '/list',
+  //   component: './TableList',
+  // },
   {
     path: '/',
     redirect: '/welcome',

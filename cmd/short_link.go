@@ -75,7 +75,7 @@ func startAdminHttpServer() *http.Server {
 	engine := gin.Default()
 
 	gin.SetMode(cfg.Mode)
-	engine.Use(middleware.GinLogger(), middleware.GinRecovery(true))
+	engine.Use(middleware.GinLogger(), middleware.GinRecovery(true), middleware.CORS(), middleware.JWTAuthMiddleware())
 
 	rootGroup := engine.Group(cfg.ContextPath)
 	admin.NewRouter(rootGroup)

@@ -11,5 +11,6 @@ func NewLinkRouter(rg *gin.RouterGroup) {
 	linkGroup := rg.Group("/link")
 	{
 		linkGroup.POST("/add", linkController.AddLink)
+		linkGroup.POST("/list", linkController.LinkList)
 	}
 }

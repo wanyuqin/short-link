@@ -1,9 +1,12 @@
 package controller
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"short-link/api/admin/request"
+	"short-link/api/middleware"
 	"short-link/internal/user/services"
+	"strings"
 )
 
 type UserController struct {
@@ -56,8 +59,31 @@ func (ctl *UserController) Login(c *gin.Context) {
 		ctl.Error(c, err)
 		return
 	}
-	err = services.NewUserService().Login(c.Request.Context(), &req)
+	user, err := services.NewUserService().Login(c.Request.Context(), &req)
 	if err != nil {
-
+		ctl.Error(c, err)
+		return
 	}
+	token, _ := middleware.GetToken(user.ID, user.Username)
+
+	ctl.Response(c, gin.H{"token": token})
+}
+
+func (ctl *UserController) CurrentUser(c *gin.Context) {
+	authHeader := c.Request.Header.Get("Authorization")
+	if authHeader == "" {
+		ctl.Error(c, errors.New("未知用户"))
+		return
+	}
+	parts := strings.SplitN(authHeader, " ", 2)
+	if !(len(parts) == 2 && parts[0] == "Bearer") {
+		ctl.Error(c, errors.New("请求头中auth格式有误"))
+		return
+	}
+	m, err := middleware.ParseToken(parts[1])
+	if err != nil {
+		ctl.Error(c, err)
+		return
+	}
+	ctl.Response(c, m)
 }
