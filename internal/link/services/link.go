@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go.uber.org/zap"
 	"short-link/api/admin/request"
+	"short-link/ctxkit"
 	"short-link/internal/link/repository"
 	"short-link/internal/link/repository/db"
 	"short-link/logs"
@@ -24,6 +25,11 @@ func NewLinkService() *LinkService {
 
 func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) error {
 	var expiredAt = int64(-1)
+	userId := ctxkit.GetUserId(ctx)
+	if userId == 0 {
+		return errors.New("未登录")
+	}
+	req.UserId = userId
 	if req.OriginUrl == "" {
 		return errors.New("原链接为空")
 	}

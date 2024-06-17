@@ -43,6 +43,15 @@ func (ctl *Controller) Redirect(c *gin.Context, url string) {
 	c.Abort()
 }
 
+func (ctl *Controller) ParamException(c *gin.Context, err error) {
+	c.JSON(http.StatusOK, Response{
+		Code:      http.StatusBadRequest,
+		Msg:       err.Error(),
+		TimeStamp: time.Now().Unix(),
+	})
+	c.Abort()
+}
+
 type UserToken struct {
 	Id       uint64 `json:"id"`
 	Username string `json:"username"`

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"short-link/api/admin/request"
@@ -32,12 +31,6 @@ func (ctl *LinkController) AddLink(c *gin.Context) {
 		ctl.Error(c, err)
 		return
 	}
-	userId, ok := c.Get("userId")
-	if !ok {
-		ctl.Error(c, errors.New("unknown user id "))
-		return
-	}
-	req.UserId = userId.(uint64)
 	err := services.NewLinkService().AddLink(c.Request.Context(), &req)
 	if err != nil {
 		ctl.Error(c, err)
@@ -61,5 +54,9 @@ func (ctl *LinkController) Request(c *gin.Context) {
 }
 
 func (ctl *LinkController) LinkList(c *gin.Context) {
+	var req request.LinkListReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctl.ParamException(c, err)
+	}
 
 }

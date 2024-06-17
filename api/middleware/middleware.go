@@ -140,8 +140,6 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		// 将当前请求的username信息保存到请求的上下文c上
 		c.Request.WithContext(context.WithValue(c.Request.Context(), "userId", mc["userId"]))
 		c.Request.WithContext(context.WithValue(c.Request.Context(), "username", mc["username"]))
-		c.Set("username", mc["username"])
-		c.Set("userId", mc["userId"])
 		c.Next() // 后续的处理函数可以用过c.Get("username")来获取当前请求的用户信息
 	}
 }

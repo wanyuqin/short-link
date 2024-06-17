@@ -7,5 +7,7 @@ type AddLinkReq struct {
 }
 
 type LinkListReq struct {
-	LastId uint64 `json:"lastId"`
+	LastId    uint64 `json:"lastId"`
+	PageSize  uint64 `json:"pageSize"`
+	OriginUrl string `json:"originUrl"`
 }
