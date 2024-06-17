@@ -16,18 +16,8 @@ type SlUserShortUrl struct {
 	IsDel     int    `gorm:"column:is_del;default:0;NOT NULL"`
 }
 
-func (m *SlUserShortUrl) TableName() string {
-	return "sl_user_short_url"
-}
-
 type SlSlUserShortUrlDao struct {
 	db *gorm.DB
-}
-
-func (m *SlUserShortUrl) BeforeCreate(tx *gorm.DB) (err error) {
-	m.CreatedAt = time.Now().UnixMilli()
-	m.UpdatedAt = time.Now().UnixMilli()
-	return
 }
 
 func NewSlSlUserShortUrlDao(ctx context.Context, db ...*gorm.DB) *SlSlUserShortUrlDao {
@@ -40,10 +30,28 @@ func NewSlSlUserShortUrlDao(ctx context.Context, db ...*gorm.DB) *SlSlUserShortU
 	}
 }
 
+func (m *SlUserShortUrl) TableName() string {
+	return "sl_user_short_url"
+}
+
+func (m *SlUserShortUrl) BeforeCreate(tx *gorm.DB) (err error) {
+	m.CreatedAt = time.Now().UnixMilli()
+	m.UpdatedAt = time.Now().UnixMilli()
+	return
+}
+
 func (m *SlSlUserShortUrlDao) Create(u *SlUserShortUrl, db ...*gorm.DB) error {
 	tx := m.db
 	if len(db) > 0 {
 		tx = db[0]
 	}
 	return tx.Create(&u).Error
+}
+
+func (m *SlSlUserShortUrlDao) PageByUserId(userId uint64, lastId uint64, pageSize int) ([]*SlUserShortUrl, error) {
+	var res []*SlUserShortUrl
+	err := m.db.Table((&SlUserShortUrl{}).TableName()).
+		Where("user_id = ? and id > ?", userId, lastId).
+		Limit(pageSize).Find(&res).Error
+	return res, err
 }

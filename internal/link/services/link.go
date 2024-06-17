@@ -67,3 +67,8 @@ func (svc *LinkService) Request(ctx context.Context, shortLink string) (string, 
 
 	return short.OriginalUrl, nil
 }
+
+func (svc *LinkService) LinkList(ctx context.Context, req *request.LinkListReq) {
+	//var userId uint64
+
+}

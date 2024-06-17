@@ -11,9 +11,29 @@ type ILinkRepository interface {
 	AddLink(ctx context.Context, link *db.SlLink) error
 	GetOriginal(ctx context.Context, original string) (*db.SlOriginalShortUrl, error)
 	GetByShort(ctx context.Context, short string) (*db.SlOriginalShortUrl, error)
+	GetByUserId(ctx context.Context, userId uint64, originUrl string, lastId uint64, pageSize int)
 }
 
 type LinkRepository struct {
+}
+
+func (l LinkRepository) GetByUserId(ctx context.Context, userId uint64, originUrl string, lastId uint64, pageSize int) {
+
+	if originUrl == "" {
+		shortUrlTable := make(map[string][]string)
+		userShortUrls, err := db.NewSlSlUserShortUrlDao(ctx).PageByUserId(userId, lastId, pageSize)
+		if err != nil {
+			return
+		}
+		for _, shortUrl := range userShortUrls {
+			if shortUrl.ShortUrl == "" {
+				continue
+			}
+			slLink := db.SlLink{}
+			shortUrlTable[slLink.TableName(shortUrl.ShortUrl)] = append(shortUrlTable[slLink.TableName(shortUrl.ShortUrl)], shortUrl.ShortUrl)
+		}
+
+	}
 }
 
 func (l LinkRepository) AddLink(ctx context.Context, link *db.SlLink) error {

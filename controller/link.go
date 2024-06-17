@@ -61,5 +61,11 @@ func (ctl *LinkController) Request(c *gin.Context) {
 }
 
 func (ctl *LinkController) LinkList(c *gin.Context) {
+	var req request.LinkListReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctl.Error(c, err)
+		return
+	}
 
+	services.NewLinkService().LinkList(c.Request.Context(), &req)
 }
