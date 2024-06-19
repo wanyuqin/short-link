@@ -52,6 +52,15 @@ func (ctl *Controller) ParamException(c *gin.Context, err error) {
 	c.Abort()
 }
 
+func (ctl *Controller) UnauthorizedException(c *gin.Context) {
+	c.JSON(http.StatusOK, Response{
+		Code:      http.StatusUnauthorized,
+		Msg:       "用户未登录",
+		TimeStamp: time.Now().Unix(),
+	})
+	c.Abort()
+}
+
 type UserToken struct {
 	Id       uint64 `json:"id"`
 	Username string `json:"username"`

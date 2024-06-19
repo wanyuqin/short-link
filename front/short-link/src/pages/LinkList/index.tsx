@@ -1,10 +1,18 @@
-import React from 'react';
-import {ModalForm, ProFormDateTimePicker, ProFormText, ProTable, TableDropdown} from '@ant-design/pro-components';
-import {Button,message} from 'antd';
+import React, {useRef} from 'react';
+import {ModalForm, ProFormDateTimePicker, ProFormText, ProTable} from '@ant-design/pro-components';
+import {Button, message} from 'antd';
 import {PlusOutlined} from '@ant-design/icons';
-import {addLink} from '@/services/short-link/link';
-import moment from 'moment';
+import {addLink, delLink, linkList} from '@/services/short-link/link';
 
+const fetchLinkList = async () => {
+    const res = await linkList({})
+    const {data: nestedData, lastId} = res.data;
+    return {
+        data: nestedData,
+        success: res.code === 200,
+        total: lastId,
+    };
+}
 
 const columns = [
     {
@@ -41,23 +49,40 @@ const columns = [
                 编辑
             </a>,
             <a href={record.url} target="_blank" rel="noopener noreferrer" key="view">
-                查看
+                复制
             </a>,
-            <TableDropdown
-                key="actionGroup"
-                onSelect={() => action?.reload()}
-                menus={[
-                    {key: 'copy', name: '复制'},
-                    {key: 'delete', name: '删除'},
-                ]}
-            />,
+            <a onClick={async () => {
+                const res = await delLink({
+                    "shortUrl": record?.shortUrl
+                })
+                if (res.code === 200) {
+                    message.success("删除成功");
+                    action?.reload(); // 刷新表格数据
+                } else {
+                    message.error(res.msg);
+                }
+            }}>
+                删除
+            </a>,
+            // <TableDropdown
+            //     key="actionGroup"
+            //     onSelect={() => action?.reload()}
+            //     menus={[
+            //         {key: 'copy', name: '复制'},
+            //         {key: 'delete', name: '删除'},
+            //     ]}
+            // />,
         ],
     }
 ]
 
 
 const LinkList: React.FC = () => {
+    const actionRef = useRef<any>(); // 创建一个ref来存储ProTable的实例
+
     return <ProTable
+        actionRef={actionRef}
+        request={fetchLinkList}
         columns={columns}
         toolBarRender={() => [
             <ModalForm
@@ -71,6 +96,7 @@ const LinkList: React.FC = () => {
                     const ret = await addLink(values)
                     if (ret.code == 200) {
                         message.success("添加成功")
+                        actionRef.current?.reload(); // 刷新表格数据
                         return true
                     }
                     message.error(ret.msg)

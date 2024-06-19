@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"short-link/api/admin/request"
+	"short-link/ctxkit"
 	"short-link/internal/link/services"
 )
 
@@ -31,6 +32,16 @@ func (ctl *LinkController) AddLink(c *gin.Context) {
 		ctl.Error(c, err)
 		return
 	}
+	if err := req.Validate(); err != nil {
+		ctl.ParamException(c, err)
+		return
+	}
+	userId := ctxkit.GetUserId(c.Request.Context())
+	if userId == 0 {
+		ctl.UnauthorizedException(c)
+		return
+	}
+	req.UserId = userId
 	err := services.NewLinkService().AddLink(c.Request.Context(), &req)
 	if err != nil {
 		ctl.Error(c, err)
@@ -60,5 +71,34 @@ func (ctl *LinkController) LinkList(c *gin.Context) {
 		return
 	}
 
-	services.NewLinkService().LinkList(c.Request.Context(), &req)
+	resp, err := services.NewLinkService().LinkList(c.Request.Context(), &req)
+	if err != nil {
+		ctl.Error(c, err)
+		return
+	}
+	ctl.Response(c, resp)
+}
+
+func (ctl *LinkController) DeleteLink(c *gin.Context) {
+	var req request.DelLinkReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctl.ParamException(c, err)
+		return
+	}
+	if err := req.Validate(); err != nil {
+		ctl.ParamException(c, err)
+		return
+	}
+	userId := ctxkit.GetUserId(c.Request.Context())
+	if userId == 0 {
+		ctl.UnauthorizedException(c)
+		return
+	}
+	req.UserId = userId
+	err := services.NewLinkService().DeleteLink(c.Request.Context(), &req)
+	if err != nil {
+		ctl.Error(c, err)
+		return
+	}
+	ctl.Response(c, gin.H{})
 }

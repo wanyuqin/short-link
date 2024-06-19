@@ -12,5 +12,6 @@ func NewLinkRouter(rg *gin.RouterGroup) {
 	{
 		linkGroup.POST("/add", linkController.AddLink)
 		linkGroup.POST("/list", linkController.LinkList)
+		linkGroup.POST("/del", linkController.DeleteLink)
 	}
 }

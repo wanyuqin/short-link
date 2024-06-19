@@ -7,8 +7,8 @@ func GetUserId(ctx context.Context) uint64 {
 	if value == nil {
 		return 0
 	}
-	if u, ok := value.(uint64); ok {
-		return u
+	if u, ok := value.(float64); ok {
+		return uint64(u)
 	}
 	return 0
 }

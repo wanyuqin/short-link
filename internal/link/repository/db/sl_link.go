@@ -11,7 +11,7 @@ import (
 )
 
 type SlLink struct {
-	ID        int64  `gorm:"column:id;primary_key;AUTO_INCREMENT"`
+	ID        uint64 `gorm:"column:id;primary_key;AUTO_INCREMENT"`
 	OriginUrl string `gorm:"column:origin_url;NOT NULL"`           // 原始链接
 	ShortUrl  string `gorm:"column:short_url;NOT NULL"`            // 短链
 	ExpiredAt int64  `gorm:"column:expired_at;default:0;NOT NULL"` // 过期时间
@@ -63,6 +63,34 @@ func (m *SlLinkDao) Create(l *SlLink, db ...*gorm.DB) error {
 func (m *SlLinkDao) GetByOriginUrl(originUrl string) (*SlLink, error) {
 	var res SlLink
 	err := m.db.Where("origin_url = ?", originUrl).First(&res).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (m *SlLinkDao) GetByShortUrlsWithTableName(tableName string, shortUrls []string) ([]*SlLink, error) {
+	var res []*SlLink
+	err := m.db.Table(tableName).Where("short_url in (?) and is_del = 0", shortUrls).
+		Order("created_at DESC").
+		Find(&res).Error
+	return res, err
+}
+
+func (m *SlLinkDao) UpdateByShortUrl(shortUrl string, data map[string]interface{}, db ...*gorm.DB) error {
+	tx := m.db
+	if len(db) > 0 {
+		tx = db[0]
+	}
+	return tx.Table((&SlLink{}).TableName(shortUrl)).Where("short_url = ?", shortUrl).Updates(data).Error
+}
+
+func (m *SlLinkDao) GetByShortUrl(shortUrl string) (*SlLink, error) {
+	var res SlLink
+	err := m.db.Table((&SlLink{}).TableName(shortUrl)).Where("short_url = ? and is_del = ?", shortUrl, 0).First(&res).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

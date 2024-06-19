@@ -49,7 +49,7 @@ func (m *SlOriginalShortUrlDao) Create(u *SlOriginalShortUrl, db ...*gorm.DB) er
 
 func (m *SlOriginalShortUrlDao) GetByOriginalUrl(originalUrl string) (*SlOriginalShortUrl, error) {
 	var res SlOriginalShortUrl
-	err := m.db.Where("original_url = ?", originalUrl).First(&res).Error
+	err := m.db.Where("original_url = ? and is_del = 0", originalUrl).First(&res).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -61,7 +61,7 @@ func (m *SlOriginalShortUrlDao) GetByOriginalUrl(originalUrl string) (*SlOrigina
 
 func (m *SlOriginalShortUrlDao) GetByShortUrl(shortUrl string) (*SlOriginalShortUrl, error) {
 	var res SlOriginalShortUrl
-	err := m.db.Where("short_url = ?", shortUrl).First(&res).Error
+	err := m.db.Where("short_url = ? and is_del = 0", shortUrl).First(&res).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -69,4 +69,12 @@ func (m *SlOriginalShortUrlDao) GetByShortUrl(shortUrl string) (*SlOriginalShort
 		return nil, err
 	}
 	return &res, nil
+}
+
+func (m *SlOriginalShortUrlDao) UpdateByShortUrl(shortUrl string, data map[string]interface{}, db ...*gorm.DB) error {
+	tx := m.db
+	if len(db) > 0 {
+		tx = db[0]
+	}
+	return tx.Table((&SlOriginalShortUrl{}).TableName()).Where("short_url = ?", shortUrl).Updates(data).Error
 }
