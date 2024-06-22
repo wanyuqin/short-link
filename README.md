@@ -229,12 +229,12 @@ CREATE TABLE sl_original_short_url
 (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
     short_url    VARCHAR(50)      NOT NULL COMMENT '短链',
-    original_url VARCHAR(255)     NOT NULL COMMENT '原始链接',
+    origin_url VARCHAR(255)     NOT NULL COMMENT '原始链接',
     created_at   BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at   BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del       INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
     UNIQUE       idx_short_url (short_url),
-    UNIQUE       idx_original_url (original_url),
+    UNIQUE       idx_origin_url (origin_url),
     INDEX        idx_created_at (created_at),
     INDEX        idx_updated_at (updated_at)
 ) COMMENT '短链与原始链接表';

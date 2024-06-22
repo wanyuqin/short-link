@@ -10,10 +10,10 @@ type Controller struct {
 }
 
 type Response struct {
-	Code      int         `json:"code"`
-	Data      interface{} `json:"data"`
-	Msg       string      `json:"msg"`
-	TimeStamp int64       `json:"timeStamp"`
+	Code      int         `json:"code,omitempty"`
+	Data      interface{} `json:"data,omitempty"`
+	Msg       string      `json:"msg,omitempty"`
+	TimeStamp int64       `json:"timeStamp,omitempty"`
 }
 
 func (ctl *Controller) Response(c *gin.Context, data interface{}) {
@@ -59,6 +59,12 @@ func (ctl *Controller) UnauthorizedException(c *gin.Context) {
 		TimeStamp: time.Now().Unix(),
 	})
 	c.Abort()
+}
+
+func (ctl *Controller) PageNotFound(c *gin.Context) {
+	c.JSON(http.StatusNotFound, Response{
+		Msg: "page not found",
+	})
 }
 
 type UserToken struct {

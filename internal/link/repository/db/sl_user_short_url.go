@@ -63,3 +63,11 @@ func (m *SlSlUserShortUrlDao) UpdateByShortUrl(shortUrl string, data map[string]
 	}
 	return tx.Table((&SlUserShortUrl{}).TableName()).Where("short_url = ?", shortUrl).Updates(data).Error
 }
+
+func (m *SlSlUserShortUrlDao) DeleteByShortUrl(shortUrl string, db ...*gorm.DB) error {
+	tx := m.db
+	if len(db) > 0 {
+		tx = db[0]
+	}
+	return tx.Table((&SlUserShortUrl{}).TableName()).Where("short_url = ?", shortUrl).Delete(&SlUserShortUrl{}).Error
+}

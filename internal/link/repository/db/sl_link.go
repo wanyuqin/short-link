@@ -11,14 +11,14 @@ import (
 )
 
 type SlLink struct {
-	ID        uint64 `gorm:"column:id;primary_key;AUTO_INCREMENT"`
-	OriginUrl string `gorm:"column:origin_url;NOT NULL"`           // 原始链接
-	ShortUrl  string `gorm:"column:short_url;NOT NULL"`            // 短链
-	ExpiredAt int64  `gorm:"column:expired_at;default:0;NOT NULL"` // 过期时间
-	UserId    uint64 `gorm:"column:user_id;default:0;NOT NULL"`    // 用户ID
-	CreatedAt int64  `gorm:"column:created_at;default:0;NOT NULL"` // 创建时间
-	UpdatedAt int64  `gorm:"column:updated_at;default:0;NOT NULL"` // 更新时间
-	IsDel     int    `gorm:"column:is_del;default:0;NOT NULL"`
+	ID        uint64 `gorm:"column:id;primary_key;AUTO_INCREMENT" json:"ID,omitempty"`
+	OriginUrl string `gorm:"column:origin_url;NOT NULL" json:"originUrl,omitempty"`           // 原始链接
+	ShortUrl  string `gorm:"column:short_url;NOT NULL" json:"shortUrl,omitempty"`             // 短链
+	ExpiredAt int64  `gorm:"column:expired_at;default:0;NOT NULL" json:"expiredAt,omitempty"` // 过期时间
+	UserId    uint64 `gorm:"column:user_id;default:0;NOT NULL" json:"userId,omitempty"`       // 用户ID
+	CreatedAt int64  `gorm:"column:created_at;default:0;NOT NULL" json:"createdAt,omitempty"` // 创建时间
+	UpdatedAt int64  `gorm:"column:updated_at;default:0;NOT NULL" json:"updatedAt,omitempty"` // 更新时间
+	IsDel     int    `gorm:"column:is_del;default:0;NOT NULL" json:"isDel,omitempty"`
 }
 
 func (m *SlLink) TableName(shortUrl string) string {
@@ -86,6 +86,14 @@ func (m *SlLinkDao) UpdateByShortUrl(shortUrl string, data map[string]interface{
 		tx = db[0]
 	}
 	return tx.Table((&SlLink{}).TableName(shortUrl)).Where("short_url = ?", shortUrl).Updates(data).Error
+}
+
+func (m *SlLinkDao) DeleteByShort(shortUrl string, db ...*gorm.DB) error {
+	tx := m.db
+	if len(db) > 0 {
+		tx = db[0]
+	}
+	return tx.Table((&SlLink{}).TableName(shortUrl)).Where("short_url = ?", shortUrl).Delete(&SlLink{}).Error
 }
 
 func (m *SlLinkDao) GetByShortUrl(shortUrl string) (*SlLink, error) {

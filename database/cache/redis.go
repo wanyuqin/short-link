@@ -58,11 +58,11 @@ func (tool *RedisTool) AutoFetch(ctx context.Context, key string, ttl time.Durat
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			// 不存在
-			res, err := tool.fetchFromSource(ctx, key, fetchFun)
-			if err != nil {
+			source, err := tool.fetchFromSource(ctx, key, fetchFun)
+			if err != nil && !errors.Is(err, redis.Nil) {
 				return err
 			}
-			b, err := json.Marshal(res)
+			b, err := json.Marshal(source)
 			if err != nil {
 				return err
 			}
@@ -70,12 +70,17 @@ func (tool *RedisTool) AutoFetch(ctx context.Context, key string, ttl time.Durat
 			if err != nil {
 				return err
 			}
+
 			return json.Unmarshal(b, res)
 
 		}
 		return err
 	}
 	return json.Unmarshal([]byte(data), res)
+}
+
+func (tool *RedisTool) Del(ctx context.Context, key ...string) (int64, error) {
+	return tool.rdb.Del(ctx, key...).Result()
 }
 
 func (tool *RedisTool) fetchFromSource(ctx context.Context, key string, fetch FetchFunc) (interface{}, error) {

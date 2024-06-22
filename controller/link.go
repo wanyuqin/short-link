@@ -58,7 +58,7 @@ func (ctl *LinkController) Request(c *gin.Context) {
 	}
 	url, err := services.NewLinkService().Request(c.Request.Context(), shortLink)
 	if err != nil {
-		ctl.Error(c, err)
+		ctl.PageNotFound(c)
 		return
 	}
 	ctl.Redirect(c, url)

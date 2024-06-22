@@ -2,6 +2,7 @@ package request
 
 import (
 	"errors"
+	"short-link/internal/consts"
 	"time"
 )
 
@@ -13,7 +14,7 @@ type AddLinkReq struct {
 
 func (req *AddLinkReq) Validate() error {
 	if req.OriginUrl == "" {
-		return errors.New("原始链接为空")
+		return consts.ErrUrlIsEmpty
 	}
 	if req.ExpiredAt != "" {
 		t, _ := time.ParseInLocation("2006-01-02 15:04:05", req.ExpiredAt, time.Local)

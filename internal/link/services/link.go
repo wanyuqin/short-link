@@ -3,16 +3,23 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
+	"net/url"
 	"short-link/api/admin/request"
 	"short-link/api/admin/resopnse"
 	"short-link/ctxkit"
+	"short-link/database/cache"
+	"short-link/internal/consts"
+	"short-link/internal/link/domain"
 	"short-link/internal/link/repository"
 	"short-link/internal/link/repository/db"
 	"short-link/logs"
 	"short-link/utils"
 	"short-link/utils/timex"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -32,8 +39,12 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		err       error
 		logFmt    = "[LinkService][AddLink]"
 	)
+	if err = svc.validateOriginUrl(req.OriginUrl); err != nil {
+		logs.Error(err, logFmt+"validate origin url failed")
+		return err
+	}
 	// 查询是否已经存在长连接的短链
-	original, err := svc.linkRepo.GetOriginal(ctx, req.OriginUrl)
+	original, err := svc.linkRepo.GetOriginal(ctx, req.OriginUrl, req.UserId)
 	if err != nil {
 		logs.Error(err, logFmt+"get original failed", zap.Any("originUrl", req.OriginUrl))
 		return err
@@ -47,7 +58,8 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		logs.Error(err, logFmt, zap.Any("originUrl", req.OriginUrl))
 		return err
 	}
-	shortLink := utils.GenerateShortLink(req.OriginUrl)
+	// TODO 完善生成逻辑，减少hash冲突
+	shortLink := utils.GenerateShortLink(req.OriginUrl + strconv.FormatUint(req.UserId, 10))
 	if req.ExpiredAt != "" {
 		t, _ := time.ParseInLocation("2006-01-02 15:04:05", req.ExpiredAt, time.Local)
 		expiredAt = t.UnixMilli()
@@ -63,26 +75,51 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		UserId:    req.UserId,
 	}
 	err = svc.linkRepo.AddLink(ctx, slLink)
-	logs.Error(err, logFmt+"add link failed", zap.Any("slLink", slLink))
+	if err != nil {
+		logs.Error(err, logFmt+"add link failed", zap.Any("slLink", slLink))
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return errors.New("原链接重复")
+		}
+	}
+
 	return err
 }
 
 func (svc *LinkService) Request(ctx context.Context, shortLink string) (string, error) {
-	//TODO redis
-	//rdb := cache.NewRedisTool(ctx)
-	//rdb.AutoFetch(ctx,)
-	short, err := svc.linkRepo.GetByShort(ctx, shortLink)
+	var (
+		redisKey  = fmt.Sprintf(consts.RedisKeyShorUrl, shortLink)
+		originUrl string
+		shortUrl  domain.ShorUrl
+	)
+
+	rdb := cache.NewRedisTool(ctx)
+	err := rdb.AutoFetch(ctx, redisKey, 0, &shortUrl, func(ctx context.Context) (interface{}, error) {
+		short, err := svc.linkRepo.GetByShort(ctx, shortLink)
+		if err != nil {
+			return "", err
+		}
+
+		if short == nil {
+			return "", errors.New("record not found")
+		}
+		ds := domain.ShorUrl{
+			OriginUrl: short.OriginUrl,
+			ShorUrl:   short.ShortUrl,
+			ExpiredAt: short.ExpiredAt,
+		}
+		return ds, nil
+	})
 	if err != nil {
-		logs.Error(err, "get by short link failed", zap.Any("shortLink", shortLink))
+		logs.Error(err, "[LinkService] auto fetch failed")
 		return "", err
 	}
 
-	if short == nil {
-		logs.Error(err, "get by short link not found", zap.Any("shortLink", shortLink))
+	if shortUrl.ExpiredAt > 0 && shortUrl.ExpiredAt < time.Now().UnixMilli() {
 		return "", errors.New("record not found")
 	}
+	originUrl = shortUrl.OriginUrl
 
-	return short.OriginUrl, nil
+	return originUrl, nil
 }
 
 func (svc *LinkService) LinkList(ctx context.Context, req *request.LinkListReq) (*resopnse.LisLinkResp, error) {
@@ -92,7 +129,7 @@ func (svc *LinkService) LinkList(ctx context.Context, req *request.LinkListReq) 
 	}
 
 	userId := ctxkit.GetUserId(ctx)
-	list, lastId, err := repository.NewLinkRepository().GetByUserId(ctx, userId, req.OriginUrl, req.LastId, req.PageSize)
+	list, lastId, err := repository.NewLinkRepository().PageUserLink(ctx, userId, req.OriginUrl, req.LastId, req.PageSize)
 	if err != nil {
 		logs.Error(err, "")
 		return resp, err
@@ -137,12 +174,30 @@ func (svc *LinkService) DeleteLink(ctx context.Context, r *request.DelLinkReq) e
 	if short.UserId != r.UserId {
 		return errors.New("操作非法")
 	}
-	if err = svc.linkRepo.UpdateByShort(ctx, short.ShortUrl, map[string]interface{}{
-		"is_del":     1,
-		"updated_at": time.Now().UnixMilli(),
-	}); err != nil {
-		logs.Error(err, logFmt+"update by short failed")
+	if err = svc.linkRepo.DeleteByShort(ctx, short.ShortUrl); err != nil {
+		logs.Error(err, logFmt+"delete by short failed")
+		return err
 	}
 
 	return err
+}
+
+func (svc *LinkService) validateOriginUrl(originUrl string) error {
+	if originUrl == "" {
+		return consts.ErrUrlIsEmpty
+	}
+	parseUrl, err := url.Parse(originUrl)
+	if err != nil {
+		return err
+	}
+	if parseUrl.Scheme == "" {
+		return consts.ErrSchemeIsEmpty
+	}
+	if parseUrl.Scheme != consts.HttpScheme && parseUrl.Scheme != consts.HttpsScheme {
+		return consts.ErrSchemeInvalid
+	}
+	if parseUrl.Host == "" {
+		return consts.ErrHostIsEmpty
+	}
+	return nil
 }
