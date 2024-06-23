@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"short-link/api/admin/request"
-	"short-link/api/middleware"
 	"short-link/internal/user/services"
+	"short-link/utils/apix"
 	"strings"
 )
 
@@ -64,7 +64,7 @@ func (ctl *UserController) Login(c *gin.Context) {
 		ctl.Error(c, err)
 		return
 	}
-	token, _ := middleware.GetToken(user.ID, user.Username)
+	token, _ := apix.GetToken(user.ID, user.Username)
 
 	ctl.Response(c, gin.H{"token": token})
 }
@@ -80,7 +80,7 @@ func (ctl *UserController) CurrentUser(c *gin.Context) {
 		ctl.Error(c, errors.New("请求头中auth格式有误"))
 		return
 	}
-	m, err := middleware.ParseToken(parts[1])
+	m, err := apix.ParseToken(parts[1])
 	if err != nil {
 		ctl.Error(c, err)
 		return

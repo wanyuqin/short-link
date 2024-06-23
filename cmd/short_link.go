@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -36,10 +37,11 @@ var (
 			logs.InitializeLogger()
 			return nil
 		},
+		// TODO 调整启动
 		Run: func(cmd *cobra.Command, args []string) {
 			adminServer := startAdminHttpServer()
 			appServer := startHttpServer()
-
+			metricsServer := startMetricsServer()
 			// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
 			quit := make(chan os.Signal, 1)
 			signal.Notify(quit, os.Interrupt)
@@ -53,6 +55,9 @@ var (
 			}
 			logs.Info("Server exiting")
 			if err := appServer.Shutdown(ctx); err != nil {
+				logs.Fatal("App Server Shutdown:", zap.Any("err", err))
+			}
+			if err := metricsServer.Shutdown(ctx); err != nil {
 				logs.Fatal("App Server Shutdown:", zap.Any("err", err))
 			}
 		},
@@ -70,6 +75,7 @@ func Start() {
 	}
 }
 
+// admin 服务
 func startAdminHttpServer() *http.Server {
 	cfg := config.GetConfig().GetHttpConfig("admin")
 	engine := gin.Default()
@@ -97,12 +103,13 @@ func startAdminHttpServer() *http.Server {
 	return srv
 }
 
+// http 服务
 func startHttpServer() *http.Server {
 	cfg := config.GetConfig().GetHttpConfig("app")
 	engine := gin.Default()
 
 	gin.SetMode(cfg.Mode)
-	engine.Use(middleware.GinLogger(), middleware.GinRecovery(true))
+	engine.Use(middleware.GinLogger(), middleware.Metrics(), middleware.GinRecovery(true))
 
 	rootGroup := engine.Group(cfg.ContextPath)
 	app.NewRouter(rootGroup)
@@ -114,6 +121,25 @@ func startHttpServer() *http.Server {
 
 	go func() {
 		logs.Info("app http server start", zap.Any("addr", addr))
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logs.Fatal("listen: %s\n", zap.Any("err", err))
+		}
+	}()
+	return srv
+
+}
+
+// metrics 服务
+func startMetricsServer() *http.Server {
+	cfg := config.GetConfig().GetHttpConfig("metrics")
+	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: promhttp.Handler(),
+	}
+
+	go func() {
+		logs.Info("metrics http server start", zap.Any("addr", addr))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logs.Fatal("listen: %s\n", zap.Any("err", err))
 		}

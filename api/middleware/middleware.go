@@ -2,17 +2,16 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"runtime/debug"
-	"short-link/internal/consts"
+	"short-link/internal/metrics"
 	"short-link/logs"
+	"short-link/utils/apix"
 	"strings"
 	"time"
 )
@@ -128,7 +127,7 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 			return
 		}
 		// parts[1]是获取到的tokenString，我们使用之前定义好的解析JWT的函数来解析它
-		mc, err := ParseToken(parts[1])
+		mc, err := apix.ParseToken(parts[1])
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code": http.StatusUnauthorized,
@@ -144,39 +143,21 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 	}
 }
 
-func GetToken(id uint64, username string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId":   id,
-		"username": username,
-	})
+func Metrics() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
 
-	tokenString, err := token.SignedString([]byte(consts.TokenSecret))
-	if err != nil {
-		logs.Error(err, "GetToken failed")
+			shortUrl := c.Param("short-link")
+			if c.Writer.Status() == http.StatusFound && shortUrl != "" {
+				// 成功转发
+				sr := metrics.ShortUrlRequest{
+					ShortUrl: shortUrl,
+					Ip:       c.ClientIP(),
+				}
+				go metrics.RecordShortUrlRequest(&sr)
+
+			}
+		}()
+		c.Next()
 	}
-	return tokenString, err
-}
-
-func ParseToken(tokenString string) (map[string]interface{}, error) {
-	m := make(map[string]interface{})
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(consts.TokenSecret), nil
-	})
-
-	if err != nil {
-		return m, err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return m, err
-	}
-
-	for k, v := range claims {
-		m[k] = v
-	}
-	return m, nil
 }

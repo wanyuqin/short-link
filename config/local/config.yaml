@@ -10,6 +10,11 @@ application:
       host: 127.0.0.1
       port: 8081
       mode: debug
+    metrics:
+      contextPath: /
+      host: 127.0.0.1
+      port: 2112
+      mode: debug
   logger:
     level: debug
     stdType: file
