@@ -89,15 +89,19 @@ func (m *SlOriginalShortUrlDao) DeleteByShortUrl(shortUrl string, db ...*gorm.DB
 
 }
 
-func (m *SlOriginalShortUrlDao) PageByOriginalUrl(originalUrl string, userId uint64, lastId uint64, pageSize int) ([]*SlOriginalShortUrl, error) {
-	var res []*SlOriginalShortUrl
-	query := m.db.Where("user_id = ? ", userId)
+func (m *SlOriginalShortUrlDao) PageByOriginalUrl(originalUrl string, userId uint64, page int, pageSize int) ([]*SlOriginalShortUrl, int64, error) {
+	var (
+		res   []*SlOriginalShortUrl
+		count int64
+	)
+	query := m.db.Table((&SlOriginalShortUrl{}).TableName()).
+		Where("user_id = ? ", userId)
 	if originalUrl != "" {
 		query = query.Where("origin_url = ? ", originalUrl)
 	}
-	if lastId > 0 {
-		query = query.Where("id < ?", lastId)
-	}
-	err := query.Order("id desc").Limit(pageSize).Find(&res).Error
-	return res, err
+	err := query.Order("id desc").
+		Count(&count).
+		Offset((page - 1) * pageSize).Limit(pageSize).
+		Find(&res).Error
+	return res, count, err
 }

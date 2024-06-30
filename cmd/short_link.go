@@ -133,9 +133,12 @@ func startHttpServer() *http.Server {
 func startMetricsServer() *http.Server {
 	cfg := config.GetConfig().GetHttpConfig("metrics")
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: promhttp.Handler(),
+		Handler: mux,
 	}
 
 	go func() {

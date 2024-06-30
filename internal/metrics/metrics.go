@@ -6,7 +6,12 @@ import (
 	"short-link/internal/consts"
 )
 
-var ()
+var (
+	shortUrlRequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: consts.MetricsShortUrlRequest,
+		Help: "Total number of HTTP requests to the shortUrl endpoint. This metric counts every request made to the shortUrl endpoint, providing insights into the usage frequency of the shortUrl service.",
+	}, []string{"shortUrl", "ip"})
+)
 
 type ShortUrlRequest struct {
 	ShortUrl string `json:"shortUrl"`
@@ -20,12 +25,7 @@ func (sr *ShortUrlRequest) MetricsLabel() prometheus.Labels {
 	}
 }
 
+// RecordShortUrlRequest 记录短链访问指标
 func RecordShortUrlRequest(sr *ShortUrlRequest) {
-	shortUrlRequestCounter := promauto.NewCounter(prometheus.CounterOpts{
-		Name:        consts.MetricsShortUrlRequest,
-		Help:        "Total number of HTTP requests to the shortUrl endpoint. This metric counts every request made to the shortUrl endpoint, providing insights into the usage frequency of the shortUrl service.",
-		ConstLabels: sr.MetricsLabel(),
-	},
-	)
-	shortUrlRequestCounter.Inc()
+	shortUrlRequestCounter.With(sr.MetricsLabel()).Inc()
 }

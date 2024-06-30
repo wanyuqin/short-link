@@ -11,59 +11,65 @@
  * @doc https://umijs.org/docs/guides/routes
  */
 export default [
-  {
-    path: '/user',
-    layout: false,
-    routes: [
-      {
-        name: 'login',
-        path: '/user/login',
-        component: './User/Login',
-      },
-    ],
-  },
-  {
-    path: '/welcome',
-    name: 'welcome',
-    icon: 'smile',
-    component: './Welcome',
-  },
-  {
-    path: '/link-list',
-    name: '链接列表',
-    icon: 'smile',
-    component: './LinkList',
-  },
-  {
-    path: '/admin',
-    name: 'admin',
-    icon: 'crown',
-    access: 'canAdmin',
-    routes: [
-      {
+    {
+        path: '/user',
+        layout: false,
+        routes: [
+            {
+                name: 'login',
+                path: '/user/login',
+                component: './User/Login',
+            },
+        ],
+    },
+    {
+        path: 'homepage',
+        name: "首页",
+        icon: 'smile',
+        component: './Welcome'
+    },
+    {
+        path: '/link-list',
+        name: '链接列表',
+        icon: 'UnorderedList',
+        component: './LinkList',
+    },
+    {
+        path: '/metrics',
+        name: '访问统计',
+        icon: 'fire',
+        component: './Metrics',
+    },
+    {
         path: '/admin',
-        redirect: '/admin/sub-page',
-      },
-      {
-        path: '/admin/sub-page',
-        name: 'sub-page',
-        component: './Admin',
-      },
-    ],
-  },
-  // {
-  //   name: 'list.table-list',
-  //   icon: 'table',
-  //   path: '/list',
-  //   component: './TableList',
-  // },
-  {
-    path: '/',
-    redirect: '/welcome',
-  },
-  {
-    path: '*',
-    layout: false,
-    component: './404',
-  },
+        name: 'admin',
+        icon: 'crown',
+        access: 'canAdmin',
+        routes: [
+            {
+                path: '/admin',
+                redirect: '/admin/sub-page',
+            },
+            {
+                path: '/admin/sub-page',
+                name: 'sub-page',
+                component: './Admin',
+            },
+        ],
+    },
+    // {
+    //   name: 'list.table-list',
+    //   icon: 'table',
+    //   path: '/list',
+    //   component: './TableList',
+    // },
+    {
+        path: '/',
+        redirect: '/welcome',
+    },
+    {
+        path: '*',
+        layout: false,
+        component: './404',
+    },
 ];

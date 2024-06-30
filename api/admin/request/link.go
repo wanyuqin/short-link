@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type PageReq struct {
+	Page     int `json:"page"`
+	PageSize int `json:"pageSize"`
+}
+
 type AddLinkReq struct {
 	OriginUrl string `json:"originUrl"`
 	ExpiredAt string `json:"expiredAt"`
@@ -26,8 +31,7 @@ func (req *AddLinkReq) Validate() error {
 }
 
 type LinkListReq struct {
-	LastId    uint64 `json:"lastId"`
-	PageSize  int    `json:"pageSize"`
+	PageReq
 	OriginUrl string `json:"originUrl"`
 }
 

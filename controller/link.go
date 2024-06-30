@@ -70,7 +70,12 @@ func (ctl *LinkController) LinkList(c *gin.Context) {
 		ctl.ParamException(c, err)
 		return
 	}
-
+	if req.Page == 0 {
+		req.Page = 1
+	}
+	if req.PageSize == 0 {
+		req.PageSize = 20
+	}
 	resp, err := services.NewLinkService().LinkList(c.Request.Context(), &req)
 	if err != nil {
 		ctl.Error(c, err)

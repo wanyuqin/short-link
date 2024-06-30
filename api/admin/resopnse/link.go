@@ -1,8 +1,8 @@
 package resopnse
 
 type LisLinkResp struct {
-	Data   []Link `json:"data"`
-	LastId uint64 `json:"lastId"`
+	Data  []Link `json:"data"`
+	Total int64  `json:"total"`
 }
 
 type Link struct {

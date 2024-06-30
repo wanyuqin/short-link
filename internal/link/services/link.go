@@ -24,12 +24,14 @@ import (
 )
 
 type LinkService struct {
-	linkRepo repository.ILinkRepository
+	linkRepo      repository.ILinkRepository
+	blackListRepo repository.IBlackListRepository
 }
 
 func NewLinkService() *LinkService {
 	return &LinkService{
-		linkRepo: repository.NewLinkRepository(),
+		linkRepo:      repository.NewLinkRepository(),
+		blackListRepo: repository.NewBlackListRepository(),
 	}
 }
 
@@ -123,15 +125,12 @@ func (svc *LinkService) Request(ctx context.Context, shortLink string) (string, 
 }
 
 func (svc *LinkService) LinkList(ctx context.Context, req *request.LinkListReq) (*resopnse.LisLinkResp, error) {
+	logFmt := "[LinkService][LinkList]"
 	resp := &resopnse.LisLinkResp{}
-	if req.PageSize == 0 {
-		req.PageSize = 20
-	}
-
 	userId := ctxkit.GetUserId(ctx)
-	list, lastId, err := repository.NewLinkRepository().PageUserLink(ctx, userId, req.OriginUrl, req.LastId, req.PageSize)
+	list, total, err := repository.NewLinkRepository().PageUserLink(ctx, userId, req.OriginUrl, req.Page, req.PageSize)
 	if err != nil {
-		logs.Error(err, "")
+		logs.Error(err, logFmt+"page user link failed")
 		return resp, err
 	}
 	sort.Slice(list, func(i, j int) bool {
@@ -157,21 +156,21 @@ func (svc *LinkService) LinkList(ctx context.Context, req *request.LinkListReq) 
 	}
 
 	resp.Data = data
-	resp.LastId = lastId
+	resp.Total = total
 	return resp, nil
 }
 
-func (svc *LinkService) DeleteLink(ctx context.Context, r *request.DelLinkReq) error {
+func (svc *LinkService) DeleteLink(ctx context.Context, req *request.DelLinkReq) error {
 	logFmt := "[LinkService][DeleteLink]"
-	short, err := svc.linkRepo.GetByShort(ctx, r.ShortUrl)
+	short, err := svc.linkRepo.GetByShort(ctx, req.ShortUrl)
 	if err != nil {
-		logs.Error(err, logFmt+"get by short link failed", zap.Any("shortLink", r.ShortUrl))
+		logs.Error(err, logFmt+"get by short link failed", zap.Any("shortLink", req.ShortUrl))
 		return err
 	}
 	if short == nil {
 		return errors.New("短链不存在")
 	}
-	if short.UserId != r.UserId {
+	if short.UserId != req.UserId {
 		return errors.New("操作非法")
 	}
 	if err = svc.linkRepo.DeleteByShort(ctx, short.ShortUrl); err != nil {

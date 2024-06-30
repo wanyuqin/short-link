@@ -240,3 +240,11 @@ CREATE TABLE sl_original_short_url
 ) COMMENT '短链与原始链接表';
 
 ```
+
+
+## TODO 
+* 黑名单
+* 配置热更新
+* 限流
+* 本地缓存（？）
+* 前端适配

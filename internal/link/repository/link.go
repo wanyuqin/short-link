@@ -16,7 +16,7 @@ type ILinkRepository interface {
 	AddLink(ctx context.Context, link *db.SlLink) error
 	GetOriginal(ctx context.Context, original string, userId uint64) (*db.SlOriginalShortUrl, error)
 	GetByShort(ctx context.Context, short string) (*db.SlLink, error)
-	PageUserLink(ctx context.Context, userId uint64, originUrl string, lastId uint64, pageSize int) ([]*db.SlLink, uint64, error)
+	PageUserLink(ctx context.Context, userId uint64, originUrl string, page int, pageSize int) ([]*db.SlLink, int64, error)
 	UpdateByShort(ctx context.Context, shortUrl string, data map[string]interface{}) error
 	DeleteByShort(ctx context.Context, shortUrl string) error
 }
@@ -71,16 +71,16 @@ func (l LinkRepository) UpdateByShort(ctx context.Context, shortUrl string, data
 
 }
 
-func (l LinkRepository) PageUserLink(ctx context.Context, userId uint64, originUrl string, lastId uint64, pageSize int) ([]*db.SlLink, uint64, error) {
+func (l LinkRepository) PageUserLink(ctx context.Context, userId uint64, originUrl string, page int, pageSize int) ([]*db.SlLink, int64, error) {
 	var (
-		res     []*db.SlLink
-		lock    = sync.Mutex{}
-		nLastId uint64
+		res   []*db.SlLink
+		lock  = sync.Mutex{}
+		total int64
 	)
-	urls, err := db.NewSlOriginalShortUrlDao(ctx).PageByOriginalUrl(originUrl, userId, lastId, pageSize)
+	urls, total, err := db.NewSlOriginalShortUrlDao(ctx).PageByOriginalUrl(originUrl, userId, page, pageSize)
 	shortUrlTable := make(map[string][]string)
 	if err != nil {
-		return res, nLastId, nil
+		return res, total, err
 	}
 	for _, url := range urls {
 		if url.ShortUrl == "" {
@@ -88,7 +88,6 @@ func (l LinkRepository) PageUserLink(ctx context.Context, userId uint64, originU
 		}
 		slLink := db.SlLink{}
 		shortUrlTable[slLink.TableName(url.ShortUrl)] = append(shortUrlTable[slLink.TableName(url.ShortUrl)], url.ShortUrl)
-		nLastId = url.ID
 	}
 	wg := &sync.WaitGroup{}
 	for key, value := range shortUrlTable {
@@ -107,7 +106,7 @@ func (l LinkRepository) PageUserLink(ctx context.Context, userId uint64, originU
 	}
 	wg.Wait()
 
-	return res, nLastId, nil
+	return res, total, nil
 }
 
 func (l LinkRepository) AddLink(ctx context.Context, link *db.SlLink) error {

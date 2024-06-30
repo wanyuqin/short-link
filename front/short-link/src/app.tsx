@@ -1,13 +1,13 @@
-import {AvatarDropdown, AvatarName, Footer, Question, SelectLang} from '@/components';
-import {LinkOutlined} from '@ant-design/icons';
+import {AvatarDropdown, AvatarName, Footer} from '@/components';
 import type {Settings as LayoutSettings} from '@ant-design/pro-components';
 import {SettingDrawer} from '@ant-design/pro-components';
 import type {RunTimeLayoutConfig} from '@umijs/max';
-import {history, Link} from '@umijs/max';
+import {history} from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
 import {errorConfig} from './requestErrorConfig';
 import {queryCurrentUser} from "@/services/short-link/user";
 import React from 'react';
+import {Github} from "@/components/RightContent";
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
@@ -50,7 +50,8 @@ export async function getInitialState(): Promise<{
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => {
     return {
-        actionsRender: () => [<Question key="doc"/>, <SelectLang key="SelectLang"/>],
+        actionsRender: () => [<Github key="github"/>,
+        ],
         avatarProps: {
             src: initialState?.currentUser?.avatar,
             title: <AvatarName/>,
@@ -91,10 +92,9 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
         ],
         links: isDev
             ? [
-                <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-                    <LinkOutlined/>
-                    <span>OpenAPI 文档</span>
-                </Link>,
+                // <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
+                //     <LinkOutlined/>
+                // </Link>,
             ]
             : [],
         menuHeaderRender: undefined,

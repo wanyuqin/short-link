@@ -12,6 +12,7 @@ import (
 	"short-link/internal/metrics"
 	"short-link/logs"
 	"short-link/utils/apix"
+	"short-link/utils/gox"
 	"strings"
 	"time"
 )
@@ -146,7 +147,6 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 func Metrics() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
-
 			shortUrl := c.Param("short-link")
 			if c.Writer.Status() == http.StatusFound && shortUrl != "" {
 				// 成功转发
@@ -154,8 +154,9 @@ func Metrics() gin.HandlerFunc {
 					ShortUrl: shortUrl,
 					Ip:       c.ClientIP(),
 				}
-				go metrics.RecordShortUrlRequest(&sr)
-
+				gox.Run(context.Background(), func(ctx context.Context) {
+					metrics.RecordShortUrlRequest(&sr)
+				})
 			}
 		}()
 		c.Next()
