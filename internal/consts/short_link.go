@@ -10,8 +10,10 @@ const (
 )
 
 var (
-	ErrUrlIsEmpty    = errors.New("url is empty")
-	ErrSchemeIsEmpty = errors.New("scheme is empty")
-	ErrSchemeInvalid = errors.New("scheme invalid")
-	ErrHostIsEmpty   = errors.New("host is empty")
+	ErrUrlIsEmpty      = errors.New("url is empty")
+	ErrSchemeIsEmpty   = errors.New("scheme is empty")
+	ErrSchemeInvalid   = errors.New("scheme invalid")
+	ErrHostIsEmpty     = errors.New("host is empty")
+	ErrShortUrlExpired = errors.New("short url expired")
+	ErrIpBlocked       = errors.New("ip blocked")
 )

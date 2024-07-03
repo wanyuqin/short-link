@@ -2,24 +2,36 @@ package gox
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 )
 
-// TODO 优化
-func RunSafe(ctx context.Context, wg *sync.WaitGroup, fn func(ctx context.Context)) {
-	if wg != nil {
-		wg.Add(1)
+type WaitGroup struct {
+	wg *sync.WaitGroup
+}
+
+func NewWaitGroup() *WaitGroup {
+	return &WaitGroup{
+		wg: &sync.WaitGroup{},
 	}
+}
+
+func (w *WaitGroup) RunSafe(ctx context.Context, fn func(ctx context.Context)) {
+	w.wg.Add(1)
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
 				fmt.Printf("Recovered from panic: %v\n", r)
 			}
-			wg.Done()
+			w.wg.Done()
 		}()
 		fn(ctx)
 	}()
+}
+
+func (w *WaitGroup) Wait() {
+	w.wg.Wait()
 }
 
 func Run(ctx context.Context, fn func(ctx context.Context)) {
@@ -31,4 +43,36 @@ func Run(ctx context.Context, fn func(ctx context.Context)) {
 		}()
 		fn(ctx)
 	}()
+}
+
+type ErrorWaitGroup struct {
+	wg   sync.WaitGroup
+	lock sync.Mutex
+	err  error
+}
+
+func NewErrorWaitGroup() *ErrorWaitGroup {
+	return &ErrorWaitGroup{}
+}
+
+func (e *ErrorWaitGroup) RunSafe(ctx context.Context, fn func(ctx context.Context) error) {
+	e.wg.Add(1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovered from panic: %v\n", r)
+			}
+			e.wg.Done()
+		}()
+		if err := fn(ctx); err != nil {
+			e.lock.Lock()
+			defer e.lock.Unlock()
+			e.err = errors.Join(e.err, err)
+		}
+	}()
+}
+
+func (e *ErrorWaitGroup) Wait() error {
+	e.wg.Wait()
+	return e.err
 }

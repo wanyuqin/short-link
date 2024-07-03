@@ -17,6 +17,11 @@ import (
 	"time"
 )
 
+var publicEndPoint = map[string]bool{
+	"/api/v1/admin/users/register": true,
+	"/api/v1/admin/users/login":    true,
+}
+
 func GinLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -101,13 +106,10 @@ func CORS() gin.HandlerFunc {
 
 func JWTAuthMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		if c.Request.URL.Path == "/api/v1/admin/users/register" || c.Request.URL.Path == "/api/v1/admin/users/login" {
+		if isPublicEndpoint(c.Request.URL.Path) {
 			c.Next()
 			return
 		}
-		// 客户端携带Token有三种方式 1.放在请求头 2.放在请求体 3.放在URI
-		// 这里假设Token放在Header的Authorization中，并使用Bearer开头
-		// 这里的具体实现方式要依据你的实际业务情况决定
 		authHeader := c.Request.Header.Get("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusOK, gin.H{
@@ -144,6 +146,14 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 	}
 }
 
+func IP() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "ip", ip))
+		c.Next()
+	}
+}
+
 func Metrics() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -161,4 +171,8 @@ func Metrics() gin.HandlerFunc {
 		}()
 		c.Next()
 	}
+}
+
+func isPublicEndpoint(path string) bool {
+	return publicEndPoint[path]
 }

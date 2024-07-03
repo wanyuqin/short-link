@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"short-link/database/cache"
@@ -19,9 +20,31 @@ type ILinkRepository interface {
 	PageUserLink(ctx context.Context, userId uint64, originUrl string, page int, pageSize int) ([]*db.SlLink, int64, error)
 	UpdateByShort(ctx context.Context, shortUrl string, data map[string]interface{}) error
 	DeleteByShort(ctx context.Context, shortUrl string) error
+
+	GetByShortWithCache(ctx context.Context, shortUrl string) (*db.SlLink, error)
 }
 
 type LinkRepository struct {
+}
+
+func (l LinkRepository) GetByShortWithCache(ctx context.Context, shortUrl string) (*db.SlLink, error) {
+	var (
+		rdb      = cache.NewRedisTool(ctx)
+		redisKey = fmt.Sprintf(consts.RedisKeyShorUrl, shortUrl)
+		res      = db.SlLink{}
+	)
+
+	err := rdb.AutoFetch(ctx, redisKey, 0, &res, func(ctx context.Context) (interface{}, error) {
+		short, err := l.GetByShort(ctx, shortUrl)
+		if err != nil {
+			return nil, err
+		}
+		if short == nil {
+			return nil, errors.New("record not found")
+		}
+		return short, nil
+	})
+	return &res, err
 }
 
 func (l LinkRepository) DeleteByShort(ctx context.Context, shortUrl string) error {
@@ -89,11 +112,11 @@ func (l LinkRepository) PageUserLink(ctx context.Context, userId uint64, originU
 		slLink := db.SlLink{}
 		shortUrlTable[slLink.TableName(url.ShortUrl)] = append(shortUrlTable[slLink.TableName(url.ShortUrl)], url.ShortUrl)
 	}
-	wg := &sync.WaitGroup{}
+	wg := gox.NewWaitGroup()
 	for key, value := range shortUrlTable {
 		urls := value
 		table := key
-		gox.RunSafe(ctx, wg, func(ctx context.Context) {
+		wg.RunSafe(ctx, func(ctx context.Context) {
 			slLinks, err := db.NewSlLinkDao(ctx).GetByShortUrlsWithTableName(table, urls)
 			if err != nil {
 				return

@@ -3,20 +3,19 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"net/url"
 	"short-link/api/admin/request"
 	"short-link/api/admin/resopnse"
 	"short-link/ctxkit"
-	"short-link/database/cache"
 	"short-link/internal/consts"
 	"short-link/internal/link/domain"
 	"short-link/internal/link/repository"
 	"short-link/internal/link/repository/db"
 	"short-link/logs"
 	"short-link/utils"
+	"short-link/utils/gox"
 	"short-link/utils/timex"
 	"sort"
 	"strconv"
@@ -41,6 +40,7 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		err       error
 		logFmt    = "[LinkService][AddLink]"
 	)
+
 	if err = svc.validateOriginUrl(req.OriginUrl); err != nil {
 		logs.Error(err, logFmt+"validate origin url failed")
 		return err
@@ -51,24 +51,22 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		logs.Error(err, logFmt+"get original failed", zap.Any("originUrl", req.OriginUrl))
 		return err
 	}
-	if req.ExpiredAt != "" {
-		t, _ := time.ParseInLocation("2006-01-02 15:04:05", req.ExpiredAt, time.Local)
-		expiredAt = t.UnixMilli()
-	}
 	if original != nil {
 		err = errors.New("原始链接已经存在")
 		logs.Error(err, logFmt, zap.Any("originUrl", req.OriginUrl))
 		return err
 	}
-	// TODO 完善生成逻辑，减少hash冲突
-	shortLink := utils.GenerateShortLink(req.OriginUrl + strconv.FormatUint(req.UserId, 10))
+
 	if req.ExpiredAt != "" {
 		t, _ := time.ParseInLocation("2006-01-02 15:04:05", req.ExpiredAt, time.Local)
-		expiredAt = t.UnixMilli()
-		if expiredAt < time.Now().UnixMilli() {
+		if t.UnixMilli() < time.Now().UnixMilli() {
 			return errors.New("过期时间不能早于当前时间")
 		}
+
+		expiredAt = t.UnixMilli()
 	}
+
+	shortLink := utils.GenerateShortLink(req.OriginUrl + strconv.FormatUint(req.UserId, 10))
 	// 保存
 	slLink := &db.SlLink{
 		ShortUrl:  shortLink,
@@ -87,39 +85,56 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 	return err
 }
 
-func (svc *LinkService) Request(ctx context.Context, shortLink string) (string, error) {
+func (svc *LinkService) Request(ctx context.Context, shortUrl string) (string, error) {
 	var (
-		redisKey  = fmt.Sprintf(consts.RedisKeyShorUrl, shortLink)
-		originUrl string
-		shortUrl  domain.ShorUrl
+		originUrl  string
+		blackList  []string
+		shortUrlDo domain.ShorUrl
+		logFmt     = "[LinkService][Request]"
 	)
+	ip := ctxkit.GetIp(ctx)
+	wg := gox.NewErrorWaitGroup()
 
-	rdb := cache.NewRedisTool(ctx)
-	err := rdb.AutoFetch(ctx, redisKey, 0, &shortUrl, func(ctx context.Context) (interface{}, error) {
-		short, err := svc.linkRepo.GetByShort(ctx, shortLink)
+	wg.RunSafe(ctx, func(ctx context.Context) error {
+		suCache, err := svc.linkRepo.GetByShortWithCache(ctx, shortUrl)
 		if err != nil {
-			return "", err
+			logs.Error(err, logFmt+"get short url with cache failed", zap.Any("shortUrl", shortUrl))
+			return err
 		}
-
-		if short == nil {
-			return "", errors.New("record not found")
+		if suCache != nil {
+			shortUrlDo.ShorUrl = suCache.ShortUrl
+			shortUrlDo.OriginUrl = suCache.OriginUrl
+			shortUrlDo.ExpiredAt = suCache.ExpiredAt
 		}
-		ds := domain.ShorUrl{
-			OriginUrl: short.OriginUrl,
-			ShorUrl:   short.ShortUrl,
-			ExpiredAt: short.ExpiredAt,
-		}
-		return ds, nil
+		return nil
 	})
+
+	wg.RunSafe(ctx, func(ctx context.Context) error {
+		list, err := svc.blackListRepo.GetBlackListWithCache(ctx, shortUrl)
+		blackList = list
+		if err != nil {
+			logs.Error(err, logFmt+"get black list  with cache failed", zap.Any("shortUrl", shortUrl))
+		}
+		return err
+	})
+
+	err := wg.Wait()
 	if err != nil {
-		logs.Error(err, "[LinkService] auto fetch failed")
 		return "", err
 	}
 
-	if shortUrl.ExpiredAt > 0 && shortUrl.ExpiredAt < time.Now().UnixMilli() {
-		return "", errors.New("record not found")
+	for _, item := range blackList {
+		if ip == item {
+			logs.Warn(logFmt+"ip is blocked", zap.Any("shortUrl", shortUrl), zap.Any("ip", ip))
+			return "", errors.New("ip is blocked")
+		}
 	}
-	originUrl = shortUrl.OriginUrl
+
+	if !shortUrlDo.IsValid() {
+		return "", consts.ErrShortUrlExpired
+	}
+
+	originUrl = shortUrlDo.OriginUrl
 
 	return originUrl, nil
 }

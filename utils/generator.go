@@ -18,19 +18,22 @@ func base62Encode(num uint64) string {
 		return string(base62Chars[0])
 	}
 
-	result := ""
+	result := make([]byte, 0)
 	for num > 0 {
 		remainder := num % 62
-		result = string(base62Chars[remainder]) + result
+		result = append([]byte{base62Chars[remainder]}, result...)
 		num = num / 62
 	}
 
-	if len(result) > 7 {
-		return result[:7]
-	}
+	// 确保结果长度为 7 位，不足则前面补 0
 	for len(result) < 7 {
-		// 不足7位的前面补0
-		result = "0" + result
+		result = append([]byte{'0'}, result...)
 	}
-	return result
+
+	// 如果结果长度超过 7 位，则截取前 7 位
+	if len(result) > 7 {
+		return string(result[:7])
+	}
+
+	return string(result)
 }

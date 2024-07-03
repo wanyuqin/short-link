@@ -47,18 +47,15 @@ func (m *SlBlackListDao) Create(l *SlBlackList, db ...*gorm.DB) error {
 	return tx.Table((&SlBlackList{}).TableName()).Create(l).Error
 }
 
-func (m *SlBlackListDao) GetByShortUrl(shortUrl string) (*SlBlackList, error) {
-	var res SlBlackList
+func (m *SlBlackListDao) GetByShortUrl(shortUrl string) ([]*SlBlackList, error) {
+	var res []*SlBlackList
 	err := m.db.Table((&SlBlackList{}).TableName()).
 		Where("short_url = ?", shortUrl).
-		First(&res).Error
+		Find(&res).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		return nil, err
 	}
-	return &res, nil
+	return res, nil
 }
 
 func (m *SlBlackListDao) List(shortUrl string, ip uint32, page, pageSize int) ([]*SlBlackList, int64, error) {

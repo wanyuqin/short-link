@@ -109,7 +109,7 @@ func startHttpServer() *http.Server {
 	engine := gin.Default()
 
 	gin.SetMode(cfg.Mode)
-	engine.Use(middleware.GinLogger(), middleware.Metrics(), middleware.GinRecovery(true))
+	engine.Use(middleware.IP(), middleware.GinLogger(), middleware.Metrics(), middleware.GinRecovery(true))
 
 	rootGroup := engine.Group(cfg.ContextPath)
 	app.NewRouter(rootGroup)
