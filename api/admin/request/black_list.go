@@ -6,19 +6,19 @@ import (
 )
 
 type AddBlackListReq struct {
-	ShortUrl string `json:"shortUrl"`
-	Ip       string `json:"ip"`
-	UserId   uint64 `json:"userId"`
+	ShortURL string `json:"shortUrl"`
+	IP       string `json:"ip"`
+	UserID   uint64 `json:"userId"`
 }
 
 func (req *AddBlackListReq) Validate() error {
-	if req.ShortUrl == "" {
+	if req.ShortURL == "" {
 		return errors.New("短链为空")
 	}
-	if req.Ip == "" {
+	if req.IP == "" {
 		return errors.New("IP为空")
 	}
-	if net.ParseIP(req.Ip) == nil {
+	if net.ParseIP(req.IP) == nil {
 		return errors.New("IP无效")
 	}
 	return nil
@@ -38,7 +38,7 @@ func (req *DeleteBlackListReq) Validate() error {
 type ListBlackListReq struct {
 	PageReq
 	ShortUrl string `json:"shortUrl"`
-	Ip       string `json:"ip"`
+	IP       string `json:"ip"`
 }
 
 func (req *ListBlackListReq) Validate() error {

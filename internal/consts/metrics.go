@@ -1,5 +1,5 @@
 package consts
 
 const (
-	MetricsShortUrlRequest = "shortUrl_requests_total"
+	MetricsShortURLRequest = "shortUrl_requests_total"
 )

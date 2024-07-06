@@ -2,8 +2,9 @@ package domain
 
 import (
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"regexp"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -18,6 +19,7 @@ func (u *User) ValidateUserName() error {
 	}
 	return errors.New("用户名长度不能小于6且不能大于30")
 }
+
 func (u *User) ValidatePassword() error {
 	length := len(u.Password)
 	if length < 8 || length > 64 {

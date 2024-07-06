@@ -1,27 +1,28 @@
 package metrics
 
 import (
+	"short-link/internal/consts"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"short-link/internal/consts"
 )
 
 var (
 	shortUrlRequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: consts.MetricsShortUrlRequest,
+		Name: consts.MetricsShortURLRequest,
 		Help: "Total number of HTTP requests to the shortUrl endpoint. This metric counts every request made to the shortUrl endpoint, providing insights into the usage frequency of the shortUrl service.",
-	}, []string{"shortUrl", "ip"})
+	}, []string{"shortUrl", "IP"})
 )
 
 type ShortUrlRequest struct {
 	ShortUrl string `json:"shortUrl"`
-	Ip       string `json:"ip"`
+	IP       string `json:"IP"`
 }
 
 func (sr *ShortUrlRequest) MetricsLabel() prometheus.Labels {
 	return prometheus.Labels{
 		"shortUrl": sr.ShortUrl,
-		"ip":       sr.Ip,
+		"IP":       sr.IP,
 	}
 }
 

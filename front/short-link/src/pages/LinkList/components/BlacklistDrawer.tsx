@@ -24,7 +24,7 @@ const columns = [
     },
     {
         title: "IP",
-        dataIndex: "ip",
+        dataIndex: "IP",
     },
     {
         title: "创建时间",
@@ -63,22 +63,22 @@ const columns = [
 
 const BlacklistDrawer: React.FC<BlacklistDrawerProps> = ({visible, onClose, shortUrl}) => {
     const actionRef = useRef<any>();
-    const [ipPart1, setIpPart1] = useState(0);
-    const [ipPart2, setIpPart2] = useState(0);
-    const [ipPart3, setIpPart3] = useState(0);
-    const [ipPart4, setIpPart4] = useState(0);
+    const [IPPart1, setIPPart1] = useState(0);
+    const [IPPart2, setIPPart2] = useState(0);
+    const [IPPart3, setIPPart3] = useState(0);
+    const [IPPart4, setIPPart4] = useState(0);
     // 重置 IP 地址部分的状态
-    const resetIpParts = () => {
-        setIpPart1(0);
-        setIpPart2(0);
-        setIpPart3(0);
-        setIpPart4(0);
+    const resetIPParts = () => {
+        setIPPart1(0);
+        setIPPart2(0);
+        setIPPart3(0);
+        setIPPart4(0);
     };
 
     // 黑名单列表
     const fetchBlackList = async (params) => {
-        const {pageSize, page, ip} = params
-        const res = await listBlackList({page, pageSize, ip, shortUrl})
+        const {pageSize, page, IP} = params
+        const res = await listBlackList({page, pageSize, IP, shortUrl})
         const {data: nestedData, total: total} = res.data;
         return {
             data: nestedData,
@@ -142,13 +142,13 @@ const BlacklistDrawer: React.FC<BlacklistDrawerProps> = ({visible, onClose, shor
                             </Button>
                         }
                         onFinish={async () => {
-                            const ip = ipPart1 + "." + ipPart2 + "." + ipPart3 + "." + ipPart4
-                            const ret = await addBlackList({ip, shortUrl})
+                            const IP = IPPart1 + "." + IPPart2 + "." + IPPart3 + "." + IPPart4
+                            const ret = await addBlackList({IP, shortUrl})
                             console.log(ret)
                             if (ret.code == 200) {
                                 message.success("添加成功");
                                 actionRef.current?.reload(); // 刷新表格数据
-                                resetIpParts(); // 重置 IP 地址部分的状态
+                                resetIPParts(); // 重置 IP 地址部分的状态
                                 return true;
                             }
                             message.error(ret.msg);
@@ -156,22 +156,22 @@ const BlacklistDrawer: React.FC<BlacklistDrawerProps> = ({visible, onClose, shor
 
                         }}
                         modalProps={{
-                            onCancel: resetIpParts // 当取消时也重置 IP 地址部分的状态
+                            onCancel: resetIPParts // 当取消时也重置 IP 地址部分的状态
                         }}
                     >
                         <Space wrap>
                             IP地址
-                            <InputNumber size="small" min={0} value={ipPart1} max={255} onChange={(value) => {
-                                setIpPart1(value)
+                            <InputNumber size="small" min={0} value={IPPart1} max={255} onChange={(value) => {
+                                setIPPart1(value)
                             }}/>.
-                            <InputNumber size="small" min={0} value={ipPart2} max={255} onChange={(value) => {
-                                setIpPart2(value)
+                            <InputNumber size="small" min={0} value={IPPart2} max={255} onChange={(value) => {
+                                setIPPart2(value)
                             }}/>.
-                            <InputNumber size="small" min={0} value={ipPart3} max={255} onChange={(value) => {
-                                setIpPart3(value)
+                            <InputNumber size="small" min={0} value={IPPart3} max={255} onChange={(value) => {
+                                setIPPart3(value)
                             }}/>.
-                            <InputNumber size="small" min={0} value={ipPart4} max={255} onChange={(value) => {
-                                setIpPart4(value)
+                            <InputNumber size="small" min={0} value={IPPart4} max={255} onChange={(value) => {
+                                setIPPart4(value)
                             }}/>
                         </Space>
                     </ModalForm>

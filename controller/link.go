@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"short-link/api/admin/request"
 	"short-link/ctxkit"
 	"short-link/internal/link/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LinkController struct {
@@ -41,7 +42,7 @@ func (ctl *LinkController) AddLink(c *gin.Context) {
 		ctl.UnauthorizedException(c)
 		return
 	}
-	req.UserId = userId
+	req.UserID = userId
 	err := services.NewLinkService().AddLink(c.Request.Context(), &req)
 	if err != nil {
 		ctl.Error(c, err)

@@ -6,10 +6,10 @@ type LisLinkResp struct {
 }
 
 type Link struct {
-	Id        uint64 `json:"id"`
-	UserId    uint64 `json:"userId"`
-	OriginUrl string `json:"originUrl"`
-	ShortUrl  string `json:"shortUrl"`
+	ID        uint64 `json:"id"`
+	UserID    uint64 `json:"userId"`
+	OriginURL string `json:"originUrl"`
+	ShortURL  string `json:"shortUrl"`
 	ExpiredAt string `json:"expiredAt"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`

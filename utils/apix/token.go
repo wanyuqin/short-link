@@ -2,9 +2,10 @@ package apix
 
 import (
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"short-link/internal/consts"
 	"short-link/logs"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func GetToken(id uint64, username string) (string, error) {
@@ -20,9 +21,9 @@ func GetToken(id uint64, username string) (string, error) {
 	return tokenString, err
 }
 
-func ParseToken(tokenString string) (map[string]interface{}, error) {
-	m := make(map[string]interface{})
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func ParseToken(tokenString string) (map[string]any, error) {
+	m := make(map[string]any)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}

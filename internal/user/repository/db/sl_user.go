@@ -3,9 +3,10 @@ package db
 import (
 	"context"
 	"errors"
-	"gorm.io/gorm"
 	"short-link/database/mysql"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type SlUser struct {
@@ -36,7 +37,7 @@ func NewSlUserDao(ctx context.Context, db ...*gorm.DB) *SlUserDao {
 	}
 }
 
-func (m *SlUser) BeforeCreate(tx *gorm.DB) (err error) {
+func (m *SlUser) BeforeCreate(_ *gorm.DB) (err error) {
 	m.CreatedAt = time.Now().UnixMilli()
 	m.UpdatedAt = time.Now().UnixMilli()
 	return

@@ -6,8 +6,8 @@ type ListBlackListResp struct {
 }
 
 type BlackList struct {
-	Id        uint64 `json:"id,omitempty"`
+	ID        uint64 `json:"id,omitempty"`
 	ShortUrl  string `json:"shortUrl,omitempty"`
-	Ip        string `json:"ip,omitempty"`
+	IP        string `json:"ip,omitempty"`
 	CreatedAt string `json:"createdAt,omitempty"`
 }

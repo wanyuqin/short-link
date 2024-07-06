@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"short-link/api/admin/request"
 	"short-link/ctxkit"
 	"short-link/internal/link/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 type BlackListController struct {
@@ -30,7 +31,7 @@ func (ctl *BlackListController) AddBlackList(c *gin.Context) {
 		ctl.UnauthorizedException(c)
 		return
 	}
-	req.UserId = userId
+	req.UserID = userId
 	if err := services.NewBlackListService().AddBlackList(c.Request.Context(), &req); err != nil {
 		ctl.Error(c, err)
 		return

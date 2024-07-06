@@ -1,13 +1,14 @@
 package logs
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"short-link/config"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-var _logger *zap.Logger
+var logger *zap.Logger
 
 func InitializeLogger() {
 	var (
@@ -42,28 +43,27 @@ func InitializeLogger() {
 		logLevel = zapcore.ErrorLevel
 	default:
 		logLevel = zapcore.InfoLevel
-
 	}
 	core := zapcore.NewCore(encoder, writeSyncer, logLevel)
-	_logger = zap.New(core, zap.AddCaller())
+	logger = zap.New(core, zap.AddCaller())
 }
 
 func Error(err error, msg string, field ...zap.Field) {
 	field = append(field, zap.Any("error", err))
-	_logger.Error(msg, field...)
+	logger.Error(msg, field...)
 }
 
 func Info(msg string, field ...zap.Field) {
-	_logger.Info(msg, field...)
+	logger.Info(msg, field...)
 }
 func Debug(msg string, field ...zap.Field) {
-	_logger.Debug(msg, field...)
+	logger.Debug(msg, field...)
 }
 
 func Warn(msg string, field ...zap.Field) {
-	_logger.Warn(msg, field...)
+	logger.Warn(msg, field...)
 }
 
 func Fatal(msg string, field ...zap.Field) {
-	_logger.Fatal(msg, field...)
+	logger.Fatal(msg, field...)
 }

@@ -10,8 +10,8 @@ func GetUserId(ctx context.Context) uint64 {
 	return uint64(value)
 }
 
-func GetIp(ctx context.Context) string {
-	ip, ok := ctx.Value("ip").(string)
+func GetIP(ctx context.Context) string {
+	ip, ok := ctx.Value("IP").(string)
 	if !ok {
 		return ""
 	}

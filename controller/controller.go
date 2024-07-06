@@ -1,22 +1,23 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Controller struct {
 }
 
 type Response struct {
-	Code      int         `json:"code,omitempty"`
-	Data      interface{} `json:"data,omitempty"`
-	Msg       string      `json:"msg,omitempty"`
-	TimeStamp int64       `json:"timeStamp,omitempty"`
+	Code      int    `json:"code,omitempty"`
+	Data      any    `json:"data,omitempty"`
+	Msg       string `json:"msg,omitempty"`
+	TimeStamp int64  `json:"timeStamp,omitempty"`
 }
 
-func (ctl *Controller) Response(c *gin.Context, data interface{}) {
+func (ctl *Controller) Response(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, Response{
 		Code:      http.StatusOK,
 		Data:      data,

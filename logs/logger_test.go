@@ -2,8 +2,9 @@ package logs
 
 import (
 	"errors"
-	"go.uber.org/zap"
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestError(t *testing.T) {

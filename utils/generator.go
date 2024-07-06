@@ -9,8 +9,8 @@ const base62Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvw
 
 func GenerateShortLink(originalUrl string) string {
 	hash := sha256.Sum256([]byte(originalUrl))
-	uniqueId := binary.BigEndian.Uint64(hash[:8])
-	return base62Encode(uniqueId)
+	uniqueID := binary.BigEndian.Uint64(hash[:8])
+	return base62Encode(uniqueID)
 }
 
 func base62Encode(num uint64) string {
@@ -22,7 +22,8 @@ func base62Encode(num uint64) string {
 	for num > 0 {
 		remainder := num % 62
 		result = append([]byte{base62Chars[remainder]}, result...)
-		num = num / 62
+		num /= 62
+
 	}
 
 	// 确保结果长度为 7 位，不足则前面补 0

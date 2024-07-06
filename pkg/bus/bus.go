@@ -22,10 +22,22 @@ type AsyncEventBus struct {
 	lock     sync.RWMutex
 }
 
+var (
+	asyncEventBus *AsyncEventBus
+	once          sync.Once
+)
+
+func GetEventBus() *AsyncEventBus {
+	return asyncEventBus
+}
+
 func NewAsyncEventBus() *AsyncEventBus {
-	return &AsyncEventBus{
-		handlers: make(map[string][]HandlerFunc),
-	}
+	once.Do(func() {
+		asyncEventBus = &AsyncEventBus{
+			handlers: make(map[string][]HandlerFunc),
+		}
+	})
+	return asyncEventBus
 }
 
 func (bus *AsyncEventBus) Publish(ctx context.Context, topic string, msg Msg) error {

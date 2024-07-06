@@ -12,14 +12,14 @@ type PageReq struct {
 }
 
 type AddLinkReq struct {
-	OriginUrl string `json:"originUrl"`
+	OriginURL string `json:"originUrl"`
 	ExpiredAt string `json:"expiredAt"`
-	UserId    uint64 `json:"userId"`
+	UserID    uint64 `json:"userId"`
 }
 
 func (req *AddLinkReq) Validate() error {
-	if req.OriginUrl == "" {
-		return consts.ErrUrlIsEmpty
+	if req.OriginURL == "" {
+		return consts.ErrURLIsEmpty
 	}
 	if req.ExpiredAt != "" {
 		t, _ := time.ParseInLocation("2006-01-02 15:04:05", req.ExpiredAt, time.Local)

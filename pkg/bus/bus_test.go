@@ -19,7 +19,6 @@ func sub1(ctx context.Context, user User) error {
 func sub2(ctx context.Context, user User) error {
 	fmt.Println("sub2", user.UserName, user.Age)
 	return nil
-
 }
 
 func TestAsyncEventBus_Publish(t *testing.T) {

@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"short-link/config"
 	"time"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -39,7 +40,7 @@ func NewDBClient(ctx context.Context, key ...string) *gorm.DB {
 func InitializeDBClient() {
 	cfg := config.GetConfig()
 	for key, mysqlCfg := range cfg.Database.Mysql {
-		db, err := newDb(mysqlCfg)
+		db, err := newDB(&mysqlCfg)
 		if err != nil {
 			panic(err)
 		}
@@ -47,7 +48,7 @@ func InitializeDBClient() {
 	}
 }
 
-func newDb(mysqlCfg config.Mysql) (*gorm.DB, error) {
+func newDB(mysqlCfg *config.Mysql) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", mysqlCfg.User, mysqlCfg.Password, mysqlCfg.Host, mysqlCfg.Port, mysqlCfg.Dbname)
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer

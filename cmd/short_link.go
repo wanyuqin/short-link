@@ -4,12 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/cobra"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,8 +15,18 @@ import (
 	"short-link/database/mysql"
 	"short-link/docs"
 	_ "short-link/docs"
+	"short-link/internal/consts"
+	"short-link/internal/link/event"
 	"short-link/logs"
+	"short-link/pkg/bus"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/spf13/cobra"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 var (
@@ -31,7 +35,9 @@ var (
 	rootCmd = &cobra.Command{
 		Use: "slink",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			config.InitializeConfig(cfgFile)
+			if err := config.InitializeConfig(cfgFile); err != nil {
+				return err
+			}
 			mysql.InitializeDBClient()
 			cache.InitializeRedisClient()
 			logs.InitializeLogger()
@@ -39,6 +45,7 @@ var (
 		},
 		// TODO 调整启动
 		Run: func(cmd *cobra.Command, args []string) {
+			newEvent()
 			adminServer := startAdminHttpServer()
 			appServer := startHttpServer()
 			metricsServer := startMetricsServer()
@@ -77,7 +84,7 @@ func Start() {
 
 // admin 服务
 func startAdminHttpServer() *http.Server {
-	cfg := config.GetConfig().GetHttpConfig("admin")
+	cfg := config.GetConfig().GetHTTPConfig("admin")
 	engine := gin.Default()
 
 	gin.SetMode(cfg.Mode)
@@ -105,7 +112,7 @@ func startAdminHttpServer() *http.Server {
 
 // http 服务
 func startHttpServer() *http.Server {
-	cfg := config.GetConfig().GetHttpConfig("app")
+	cfg := config.GetConfig().GetHTTPConfig("app")
 	engine := gin.Default()
 
 	gin.SetMode(cfg.Mode)
@@ -131,7 +138,7 @@ func startHttpServer() *http.Server {
 
 // metrics 服务
 func startMetricsServer() *http.Server {
-	cfg := config.GetConfig().GetHttpConfig("metrics")
+	cfg := config.GetConfig().GetHTTPConfig("metrics")
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 
 	mux := http.NewServeMux()
@@ -149,4 +156,9 @@ func startMetricsServer() *http.Server {
 	}()
 	return srv
 
+}
+
+func newEvent() {
+	eventBus := bus.NewAsyncEventBus()
+	eventBus.AddEventListener(consts.DeleteShortURLEvent, event.DeleteShortUrl)
 }

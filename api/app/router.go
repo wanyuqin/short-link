@@ -1,8 +1,9 @@
 package app
 
 import (
-	"github.com/gin-gonic/gin"
 	"short-link/controller"
+
+	"github.com/gin-gonic/gin"
 )
 
 func NewRouter(rg *gin.RouterGroup) {

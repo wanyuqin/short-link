@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
 	"short-link/api/admin/request"
 	"short-link/api/admin/resopnse"
 	"short-link/ctxkit"
@@ -12,6 +11,8 @@ import (
 	"short-link/logs"
 	"short-link/utils/netx"
 	"short-link/utils/timex"
+
+	"go.uber.org/zap"
 )
 
 type BlackListService struct {
@@ -28,25 +29,25 @@ func NewBlackListService() *BlackListService {
 
 func (svc *BlackListService) AddBlackList(ctx context.Context, req *request.AddBlackListReq) error {
 	logFmt := "[BlackListService][AddBlackList]"
-	short, err := svc.linkRepo.GetByShort(ctx, req.ShortUrl)
+	short, err := svc.linkRepo.GetByShort(ctx, req.ShortURL)
 	if err != nil {
-		logs.Error(err, logFmt+"get by short link failed", zap.Any("shortLink", req.ShortUrl))
+		logs.Error(err, logFmt+"get by short link failed", zap.Any("shortLink", req.ShortURL))
 		return err
 	}
 	if short == nil {
 		return errors.New("短链不存在")
 	}
-	if short.UserId != req.UserId {
+	if short.UserID != req.UserID {
 		return errors.New("操作非法")
 	}
-	ipTint, err := netx.IPToInt(req.Ip)
+	IPTint, err := netx.IPToInt(req.IP)
 	if err != nil {
-		logs.Error(err, logFmt+"transform ip to int failed")
+		logs.Error(err, logFmt+"transform IP to int failed")
 		return err
 	}
 	// 添加黑名单
-	if err = svc.blackListRepo.AddBlackList(ctx, req.ShortUrl, ipTint); err != nil {
-		logs.Error(err, logFmt+"add short url ip black list failed")
+	if err = svc.blackListRepo.AddBlackList(ctx, req.ShortURL, IPTint); err != nil {
+		logs.Error(err, logFmt+"add short url IP black list failed")
 		return err
 	}
 	return nil
@@ -56,7 +57,7 @@ func (svc *BlackListService) DeleteBlackList(ctx context.Context, id uint64) err
 	logFmt := "[BlackListService][DeleteBlackList]"
 
 	userId := ctxkit.GetUserId(ctx)
-	blackList, err := svc.blackListRepo.GetById(ctx, id)
+	blackList, err := svc.blackListRepo.GetByID(ctx, id)
 	if err != nil {
 		logs.Error(err, logFmt+"get black list by id failed")
 		return err
@@ -67,7 +68,7 @@ func (svc *BlackListService) DeleteBlackList(ctx context.Context, id uint64) err
 		return err
 	}
 
-	su := blackList.ShortUrl
+	su := blackList.ShortURL
 
 	shortUrl, err := svc.linkRepo.GetByShort(ctx, su)
 	if err != nil {
@@ -80,7 +81,7 @@ func (svc *BlackListService) DeleteBlackList(ctx context.Context, id uint64) err
 		return err
 	}
 
-	if shortUrl.UserId != userId {
+	if shortUrl.UserID != userId {
 		err = errors.New("操作非法")
 		logs.Error(err, logFmt+"")
 		return err
@@ -96,11 +97,11 @@ func (svc *BlackListService) DeleteBlackList(ctx context.Context, id uint64) err
 func (svc *BlackListService) ListBlackList(ctx context.Context, req *request.ListBlackListReq) (*resopnse.ListBlackListResp, error) {
 	logFmt := "[BlackListService][DeleteBlackList]"
 
-	ip, err := netx.IPToInt(req.Ip)
+	IP, err := netx.IPToInt(req.IP)
 	if err != nil {
-
+		return nil, err
 	}
-	blackList, total, err := svc.blackListRepo.PageBlackList(ctx, req.ShortUrl, ip, req.Page, req.PageSize)
+	blackList, total, err := svc.blackListRepo.PageBlackList(ctx, req.ShortUrl, IP, req.Page, req.PageSize)
 	if err != nil {
 		logs.Error(err, logFmt+"list black list failed")
 		return nil, err
@@ -108,11 +109,11 @@ func (svc *BlackListService) ListBlackList(ctx context.Context, req *request.Lis
 
 	data := make([]resopnse.BlackList, 0, len(blackList))
 	for _, item := range blackList {
-		ipStr := netx.IntToIP(item.Ip)
+		IPStr := netx.IntToIP(item.IP)
 		data = append(data, resopnse.BlackList{
-			Id:        item.Id,
-			ShortUrl:  item.ShortUrl,
-			Ip:        ipStr,
+			ID:        item.Id,
+			ShortUrl:  item.ShortURL,
+			IP:        IPStr,
 			CreatedAt: timex.FormatDateTime(item.CreatedAt),
 		})
 	}

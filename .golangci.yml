@@ -1,0 +1,20 @@
+linters-settings:
+  golint:
+    enabled: true
+    max-issues-per-linter: 0  # 0 表示不限制问题数量
+    skip-dirs:
+      - vendor/
+      - node_modules/
+    exclude-use-default: false  # 是否排除使用默认规则
+
+run:
+  paths:
+    - .  # 指定要运行 linter 的路径
+  exclude:
+    - vendor/
+    - node_modules/
+
+linters:
+  enable-all: true  # 启用所有 linters
+  disable:
+    - exhaustivestruct  # 禁用指定的 linter

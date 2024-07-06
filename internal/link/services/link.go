@@ -3,8 +3,7 @@ package services
 import (
 	"context"
 	"errors"
-	"go.uber.org/zap"
-	"gorm.io/gorm"
+	"fmt"
 	"net/url"
 	"short-link/api/admin/request"
 	"short-link/api/admin/resopnse"
@@ -14,12 +13,16 @@ import (
 	"short-link/internal/link/repository"
 	"short-link/internal/link/repository/db"
 	"short-link/logs"
+	"short-link/pkg/bus"
 	"short-link/utils"
 	"short-link/utils/gox"
 	"short-link/utils/timex"
 	"sort"
 	"strconv"
 	"time"
+
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type LinkService struct {
@@ -41,19 +44,19 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		logFmt    = "[LinkService][AddLink]"
 	)
 
-	if err = svc.validateOriginUrl(req.OriginUrl); err != nil {
+	if err = svc.validateOriginUrl(req.OriginURL); err != nil {
 		logs.Error(err, logFmt+"validate origin url failed")
 		return err
 	}
 	// 查询是否已经存在长连接的短链
-	original, err := svc.linkRepo.GetOriginal(ctx, req.OriginUrl, req.UserId)
+	original, err := svc.linkRepo.GetOriginal(ctx, req.OriginURL, req.UserID)
 	if err != nil {
-		logs.Error(err, logFmt+"get original failed", zap.Any("originUrl", req.OriginUrl))
+		logs.Error(err, logFmt+"get original failed", zap.Any("originUrl", req.OriginURL))
 		return err
 	}
 	if original != nil {
 		err = errors.New("原始链接已经存在")
-		logs.Error(err, logFmt, zap.Any("originUrl", req.OriginUrl))
+		logs.Error(err, logFmt, zap.Any("originUrl", req.OriginURL))
 		return err
 	}
 
@@ -66,13 +69,13 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 		expiredAt = t.UnixMilli()
 	}
 
-	shortLink := utils.GenerateShortLink(req.OriginUrl + strconv.FormatUint(req.UserId, 10))
+	shortLink := utils.GenerateShortLink(req.OriginURL + strconv.FormatUint(req.UserID, 10))
 	// 保存
 	slLink := &db.SlLink{
-		ShortUrl:  shortLink,
-		OriginUrl: req.OriginUrl,
+		ShortURL:  shortLink,
+		OriginURL: req.OriginURL,
 		ExpiredAt: expiredAt,
-		UserId:    req.UserId,
+		UserID:    req.UserID,
 	}
 	err = svc.linkRepo.AddLink(ctx, slLink)
 	if err != nil {
@@ -92,7 +95,7 @@ func (svc *LinkService) Request(ctx context.Context, shortUrl string) (string, e
 		shortUrlDo domain.ShorUrl
 		logFmt     = "[LinkService][Request]"
 	)
-	ip := ctxkit.GetIp(ctx)
+	IP := ctxkit.GetIP(ctx)
 	wg := gox.NewErrorWaitGroup()
 
 	wg.RunSafe(ctx, func(ctx context.Context) error {
@@ -102,8 +105,8 @@ func (svc *LinkService) Request(ctx context.Context, shortUrl string) (string, e
 			return err
 		}
 		if suCache != nil {
-			shortUrlDo.ShorUrl = suCache.ShortUrl
-			shortUrlDo.OriginUrl = suCache.OriginUrl
+			shortUrlDo.ShorURL = suCache.ShortURL
+			shortUrlDo.OriginURL = suCache.OriginURL
 			shortUrlDo.ExpiredAt = suCache.ExpiredAt
 		}
 		return nil
@@ -124,17 +127,17 @@ func (svc *LinkService) Request(ctx context.Context, shortUrl string) (string, e
 	}
 
 	for _, item := range blackList {
-		if ip == item {
-			logs.Warn(logFmt+"ip is blocked", zap.Any("shortUrl", shortUrl), zap.Any("ip", ip))
-			return "", errors.New("ip is blocked")
+		if IP == item {
+			logs.Warn(logFmt+"IP is blocked", zap.Any("shortUrl", shortUrl), zap.Any("IP", IP))
+			return "", errors.New("IP is blocked")
 		}
 	}
 
 	if !shortUrlDo.IsValid() {
-		return "", consts.ErrShortUrlExpired
+		return "", consts.ErrShortURLExpired
 	}
 
-	originUrl = shortUrlDo.OriginUrl
+	originUrl = shortUrlDo.OriginURL
 
 	return originUrl, nil
 }
@@ -157,10 +160,10 @@ func (svc *LinkService) LinkList(ctx context.Context, req *request.LinkListReq) 
 			continue
 		}
 		slLink := resopnse.Link{
-			Id:        item.ID,
-			UserId:    item.UserId,
-			OriginUrl: item.OriginUrl,
-			ShortUrl:  item.ShortUrl,
+			ID:        item.ID,
+			UserID:    item.UserID,
+			OriginURL: item.OriginURL,
+			ShortURL:  item.ShortURL,
 			CreatedAt: timex.FormatDateTime(item.CreatedAt),
 			UpdatedAt: timex.FormatDateTime(item.UpdatedAt),
 		}
@@ -185,20 +188,25 @@ func (svc *LinkService) DeleteLink(ctx context.Context, req *request.DelLinkReq)
 	if short == nil {
 		return errors.New("短链不存在")
 	}
-	if short.UserId != req.UserId {
+	if short.UserID != req.UserId {
 		return errors.New("操作非法")
 	}
-	if err = svc.linkRepo.DeleteByShort(ctx, short.ShortUrl); err != nil {
+	if err = svc.linkRepo.DeleteByShort(ctx, short.ShortURL); err != nil {
 		logs.Error(err, logFmt+"delete by short failed")
 		return err
 	}
+	gox.Run(context.Background(), func(ctx context.Context) {
+		if err := bus.GetEventBus().Publish(ctx, consts.DeleteShortURLEvent, req.ShortUrl); err != nil {
+			logs.Error(err, logFmt+fmt.Sprintf("publish %s event failed", consts.DeleteShortURLEvent))
+		}
+	})
 
 	return err
 }
 
 func (svc *LinkService) validateOriginUrl(originUrl string) error {
 	if originUrl == "" {
-		return consts.ErrUrlIsEmpty
+		return consts.ErrURLIsEmpty
 	}
 	parseUrl, err := url.Parse(originUrl)
 	if err != nil {
@@ -207,7 +215,7 @@ func (svc *LinkService) validateOriginUrl(originUrl string) error {
 	if parseUrl.Scheme == "" {
 		return consts.ErrSchemeIsEmpty
 	}
-	if parseUrl.Scheme != consts.HttpScheme && parseUrl.Scheme != consts.HttpsScheme {
+	if parseUrl.Scheme != consts.HTTPScheme && parseUrl.Scheme != consts.HTTPSScheme {
 		return consts.ErrSchemeInvalid
 	}
 	if parseUrl.Host == "" {

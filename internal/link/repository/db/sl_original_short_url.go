@@ -3,44 +3,45 @@ package db
 import (
 	"context"
 	"errors"
-	"gorm.io/gorm"
 	"short-link/database/mysql"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-type SlOriginalShortUrl struct {
+type SlOriginalShortURL struct {
 	ID        uint64 `gorm:"column:id;primary_key;AUTO_INCREMENT"`
-	ShortUrl  string `gorm:"column:short_url;NOT NULL"`                             // 短链
-	OriginUrl string `gorm:"column:origin_url;NOT NULL" json:"originUrl,omitempty"` // 原始链接
-	UserId    uint64 `gorm:"column:user_id;NOT NULL"`                               // 用户ID
+	ShortURL  string `gorm:"column:short_url;NOT NULL"`                             // 短链
+	OriginURL string `gorm:"column:origin_url;NOT NULL" json:"originURL,omitempty"` // 原始链接
+	UserID    uint64 `gorm:"column:user_id;NOT NULL"`                               // 用户ID
 	CreatedAt int64  `gorm:"column:created_at;default:0;NOT NULL"`                  // 创建时间
 	UpdatedAt int64  `gorm:"column:updated_at;default:0;NOT NULL"`                  // 更新时间
 	IsDel     int    `gorm:"column:is_del;default:0;NOT NULL"`
 }
 
-func (m *SlOriginalShortUrl) TableName() string {
+func (_ *SlOriginalShortURL) TableName() string {
 	return "sl_original_short_url"
 }
 
-type SlOriginalShortUrlDao struct {
+type SlOriginalShortURLDao struct {
 	db *gorm.DB
 }
 
-func (m *SlOriginalShortUrl) BeforeCreate(tx *gorm.DB) (err error) {
+func (m *SlOriginalShortURL) BeforeCreate(tx *gorm.DB) (err error) {
 	m.CreatedAt = time.Now().UnixMilli()
 	m.UpdatedAt = time.Now().UnixMilli()
 	return
 }
 
-func NewSlOriginalShortUrlDao(ctx context.Context, db ...*gorm.DB) *SlOriginalShortUrlDao {
+func NewSlOriginalShortURLDao(ctx context.Context, db ...*gorm.DB) *SlOriginalShortURLDao {
 	client := mysql.NewDBClient(ctx)
 	if len(db) > 0 {
 		client = db[0]
 	}
-	return &SlOriginalShortUrlDao{db: client}
+	return &SlOriginalShortURLDao{db: client}
 }
 
-func (m *SlOriginalShortUrlDao) Create(u *SlOriginalShortUrl, db ...*gorm.DB) error {
+func (m *SlOriginalShortURLDao) Create(u *SlOriginalShortURL, db ...*gorm.DB) error {
 	tx := m.db
 	if len(db) > 0 {
 		tx = db[0]
@@ -48,9 +49,9 @@ func (m *SlOriginalShortUrlDao) Create(u *SlOriginalShortUrl, db ...*gorm.DB) er
 	return tx.Create(&u).Error
 }
 
-func (m *SlOriginalShortUrlDao) GetByOriginalUrl(originalUrl string, userId uint64) (*SlOriginalShortUrl, error) {
-	var res SlOriginalShortUrl
-	err := m.db.Where("origin_url = ? and user_id = ? and  is_del = 0", originalUrl, userId).First(&res).Error
+func (m *SlOriginalShortURLDao) GetByOriginalURL(originalURL string, userID uint64) (*SlOriginalShortURL, error) {
+	var res SlOriginalShortURL
+	err := m.db.Where("origin_url = ? and user_id = ? and  is_del = 0", originalURL, userID).First(&res).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -60,9 +61,9 @@ func (m *SlOriginalShortUrlDao) GetByOriginalUrl(originalUrl string, userId uint
 	return &res, nil
 }
 
-func (m *SlOriginalShortUrlDao) GetByShortUrl(shortUrl string) (*SlOriginalShortUrl, error) {
-	var res SlOriginalShortUrl
-	err := m.db.Where("short_url = ? and is_del = 0", shortUrl).First(&res).Error
+func (m *SlOriginalShortURLDao) GetByShortURL(ShortURL string) (*SlOriginalShortURL, error) {
+	var res SlOriginalShortURL
+	err := m.db.Where("short_url = ? and is_del = 0", ShortURL).First(&res).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -72,32 +73,31 @@ func (m *SlOriginalShortUrlDao) GetByShortUrl(shortUrl string) (*SlOriginalShort
 	return &res, nil
 }
 
-func (m *SlOriginalShortUrlDao) UpdateByShortUrl(shortUrl string, data map[string]interface{}, db ...*gorm.DB) error {
+func (m *SlOriginalShortURLDao) UpdateByShortURL(ShortURL string, data map[string]any, db ...*gorm.DB) error {
 	tx := m.db
 	if len(db) > 0 {
 		tx = db[0]
 	}
-	return tx.Table((&SlOriginalShortUrl{}).TableName()).Where("short_url = ?", shortUrl).Updates(data).Error
+	return tx.Table((&SlOriginalShortURL{}).TableName()).Where("short_url = ?", ShortURL).Updates(data).Error
 }
 
-func (m *SlOriginalShortUrlDao) DeleteByShortUrl(shortUrl string, db ...*gorm.DB) error {
+func (m *SlOriginalShortURLDao) DeleteByShortURL(ShortURL string, db ...*gorm.DB) error {
 	tx := m.db
 	if len(db) > 0 {
 		tx = db[0]
 	}
-	return tx.Table((&SlOriginalShortUrl{}).TableName()).Where("short_url = ?", shortUrl).Delete(&SlOriginalShortUrl{}).Error
-
+	return tx.Table((&SlOriginalShortURL{}).TableName()).Where("short_url = ?", ShortURL).Delete(&SlOriginalShortURL{}).Error
 }
 
-func (m *SlOriginalShortUrlDao) PageByOriginalUrl(originalUrl string, userId uint64, page int, pageSize int) ([]*SlOriginalShortUrl, int64, error) {
+func (m *SlOriginalShortURLDao) PageByOriginalURL(originalURL string, userId uint64, page int, pageSize int) ([]*SlOriginalShortURL, int64, error) {
 	var (
-		res   []*SlOriginalShortUrl
+		res   []*SlOriginalShortURL
 		count int64
 	)
-	query := m.db.Table((&SlOriginalShortUrl{}).TableName()).
+	query := m.db.Table((&SlOriginalShortURL{}).TableName()).
 		Where("user_id = ? ", userId)
-	if originalUrl != "" {
-		query = query.Where("origin_url = ? ", originalUrl)
+	if originalURL != "" {
+		query = query.Where("origin_url = ? ", originalURL)
 	}
 	err := query.Order("id desc").
 		Count(&count).

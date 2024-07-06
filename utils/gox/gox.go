@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"short-link/logs"
 	"sync"
 )
 
@@ -22,11 +24,12 @@ func (w *WaitGroup) RunSafe(ctx context.Context, fn func(ctx context.Context)) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Recovered from panic: %v\n", r)
+				log.Printf("Recovered from panic: %v\n", r)
 			}
-			w.wg.Done()
 		}()
 		fn(ctx)
+		w.wg.Done()
+
 	}()
 }
 
@@ -38,7 +41,7 @@ func Run(ctx context.Context, fn func(ctx context.Context)) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Recovered from panic: %v\n", r)
+				logs.Error(fmt.Errorf("Recovered from panic: %v\n", r), "gox run panic")
 			}
 		}()
 		fn(ctx)
@@ -60,7 +63,7 @@ func (e *ErrorWaitGroup) RunSafe(ctx context.Context, fn func(ctx context.Contex
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Recovered from panic: %v\n", r)
+				logs.Error(fmt.Errorf("Recovered from panic: %v\n", r), "run safe panic")
 			}
 			e.wg.Done()
 		}()

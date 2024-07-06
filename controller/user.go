@@ -2,11 +2,12 @@ package controller
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"short-link/api/admin/request"
 	"short-link/internal/user/services"
 	"short-link/utils/apix"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {

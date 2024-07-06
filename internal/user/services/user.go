@@ -3,13 +3,14 @@ package services
 import (
 	"context"
 	"errors"
-	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 	"short-link/api/admin/request"
 	"short-link/internal/user/domain"
 	"short-link/internal/user/repository"
 	"short-link/internal/user/repository/db"
 	"short-link/logs"
+
+	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {

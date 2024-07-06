@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/redis/go-redis/v9"
-	"golang.org/x/sync/singleflight"
 	"short-link/config"
 	"time"
+
+	"github.com/redis/go-redis/v9"
+	"golang.org/x/sync/singleflight"
 )
 
 var (
@@ -51,9 +52,9 @@ func NewRedisTool(ctx context.Context, key ...string) *RedisTool {
 	return redisMap[dbName]
 }
 
-type FetchFunc func(ctx context.Context) (interface{}, error)
+type FetchFunc func(ctx context.Context) (any, error)
 
-func (tool *RedisTool) AutoFetch(ctx context.Context, key string, ttl time.Duration, res interface{}, fetchFun FetchFunc) error {
+func (tool *RedisTool) AutoFetch(ctx context.Context, key string, ttl time.Duration, res any, fetchFun FetchFunc) error {
 	data, err := tool.rdb.Get(ctx, key).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
@@ -72,7 +73,6 @@ func (tool *RedisTool) AutoFetch(ctx context.Context, key string, ttl time.Durat
 			}
 
 			return json.Unmarshal(b, res)
-
 		}
 		return err
 	}
@@ -83,10 +83,10 @@ func (tool *RedisTool) Del(ctx context.Context, key ...string) (int64, error) {
 	return tool.rdb.Del(ctx, key...).Result()
 }
 
-func (tool *RedisTool) fetchFromSource(ctx context.Context, key string, fetch FetchFunc) (interface{}, error) {
+func (tool *RedisTool) fetchFromSource(ctx context.Context, key string, fetch FetchFunc) (any, error) {
 	g := singleflight.Group{}
 
-	ret, err, _ := g.Do(key, func() (interface{}, error) {
+	ret, err, _ := g.Do(key, func() (any, error) {
 		go func() {
 			time.Sleep(100 * time.Millisecond)
 			g.Forget(key)

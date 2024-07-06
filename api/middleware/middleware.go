@@ -2,8 +2,6 @@ package middleware
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -15,6 +13,9 @@ import (
 	"short-link/utils/gox"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 var publicEndPoint = map[string]bool{
@@ -35,7 +36,7 @@ func GinLogger() gin.HandlerFunc {
 			zap.String("method", c.Request.Method),
 			zap.String("path", path),
 			zap.String("query", query),
-			zap.String("ip", c.ClientIP()),
+			zap.String("IP", c.ClientIP()),
 			zap.String("user-agent", c.Request.UserAgent()),
 			zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
 			zap.Duration("cost", cost),
@@ -49,23 +50,23 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 			if err := recover(); err != nil {
 				// Check for a broken connection, as it is not really a
 				// condition that warrants a panic stack trace.
-				var brokenPipe bool
+				var brokenPIPe bool
 				if ne, ok := err.(*net.OpError); ok {
 					if se, ok := ne.Err.(*os.SyscallError); ok {
 						if strings.Contains(strings.ToLower(se.Error()), "broken pipe") || strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
-							brokenPipe = true
+							brokenPIPe = true
 						}
 					}
 				}
 
 				httpRequest, _ := httputil.DumpRequest(c.Request, false)
-				if brokenPipe {
+				if brokenPIPe {
 					logs.Error(nil, c.Request.URL.Path,
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 					)
 					// If the connection is dead, we can't write a status to it.
-					c.Error(err.(error)) // nolint: errcheck
+					c.Error(err.(error)) //nolint: errcheck
 					c.Abort()
 					return
 				}
@@ -95,7 +96,7 @@ func CORS() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
 
-		if c.Request.Method == "OPTIONS" {
+		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
@@ -148,8 +149,8 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 
 func IP() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
-		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "ip", ip))
+		IP := c.ClientIP()
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "IP", IP))
 		c.Next()
 	}
 }
@@ -162,7 +163,7 @@ func Metrics() gin.HandlerFunc {
 				// 成功转发
 				sr := metrics.ShortUrlRequest{
 					ShortUrl: shortUrl,
-					Ip:       c.ClientIP(),
+					IP:       c.ClientIP(),
 				}
 				gox.Run(context.Background(), func(ctx context.Context) {
 					metrics.RecordShortUrlRequest(&sr)
