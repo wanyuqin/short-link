@@ -14,7 +14,6 @@ import (
 	"short-link/database/cache"
 	"short-link/database/mysql"
 	"short-link/docs"
-	_ "short-link/docs"
 	"short-link/internal/consts"
 	"short-link/internal/link/event"
 	"short-link/logs"

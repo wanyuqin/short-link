@@ -12,7 +12,7 @@ import (
 type SlOriginalShortURL struct {
 	ID        uint64 `gorm:"column:id;primary_key;AUTO_INCREMENT"`
 	ShortURL  string `gorm:"column:short_url;NOT NULL"`                             // 短链
-	OriginURL string `gorm:"column:origin_url;NOT NULL" json:"originURL,omitempty"` // 原始链接
+	OriginURL string `gorm:"column:origin_url;NOT NULL" json:"originUrl,omitempty"` // 原始链接
 	UserID    uint64 `gorm:"column:user_id;NOT NULL"`                               // 用户ID
 	CreatedAt int64  `gorm:"column:created_at;default:0;NOT NULL"`                  // 创建时间
 	UpdatedAt int64  `gorm:"column:updated_at;default:0;NOT NULL"`                  // 更新时间

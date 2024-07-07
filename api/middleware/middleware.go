@@ -149,8 +149,8 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 
 func IP() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		IP := c.ClientIP()
-		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "IP", IP))
+		ip := c.ClientIP()
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "ip", ip))
 		c.Next()
 	}
 }

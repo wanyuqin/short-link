@@ -19,5 +19,6 @@ func NewLinkRouter(rg *gin.RouterGroup) {
 	linkBlackListGroup.POST("/add", blackListController.AddBlackList)
 	linkBlackListGroup.POST("/del", blackListController.DeleteBlackList)
 	linkBlackListGroup.POST("/list", blackListController.ListBlackList)
+	linkBlackListGroup.POST("/update-status", blackListController.UpdateBlackListStatus)
 
 }

@@ -11,7 +11,7 @@ func GetUserId(ctx context.Context) uint64 {
 }
 
 func GetIP(ctx context.Context) string {
-	ip, ok := ctx.Value("IP").(string)
+	ip, ok := ctx.Value("ip").(string)
 	if !ok {
 		return ""
 	}

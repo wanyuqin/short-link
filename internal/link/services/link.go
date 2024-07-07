@@ -91,11 +91,11 @@ func (svc *LinkService) AddLink(ctx context.Context, req *request.AddLinkReq) er
 func (svc *LinkService) Request(ctx context.Context, shortUrl string) (string, error) {
 	var (
 		originUrl  string
-		blackList  []string
+		blackList  domain.BlackLists
 		shortUrlDo domain.ShorUrl
 		logFmt     = "[LinkService][Request]"
 	)
-	IP := ctxkit.GetIP(ctx)
+	ip := ctxkit.GetIP(ctx)
 	wg := gox.NewErrorWaitGroup()
 
 	wg.RunSafe(ctx, func(ctx context.Context) error {
@@ -127,9 +127,9 @@ func (svc *LinkService) Request(ctx context.Context, shortUrl string) (string, e
 	}
 
 	for _, item := range blackList {
-		if IP == item {
-			logs.Warn(logFmt+"IP is blocked", zap.Any("shortUrl", shortUrl), zap.Any("IP", IP))
-			return "", errors.New("IP is blocked")
+		if ip == item.IP && item.Status == consts.IPStatusActive {
+			logs.Warn(logFmt+"IP is blocked", zap.Any("shortUrl", shortUrl), zap.Any("IP", ip))
+			return "", consts.ErrIPBlocked
 		}
 	}
 

@@ -3,6 +3,7 @@ package request
 import (
 	"errors"
 	"net"
+	"short-link/internal/consts"
 )
 
 type AddBlackListReq struct {
@@ -13,13 +14,13 @@ type AddBlackListReq struct {
 
 func (req *AddBlackListReq) Validate() error {
 	if req.ShortURL == "" {
-		return errors.New("短链为空")
+		return consts.ErrShortURLIsEmpty
 	}
 	if req.IP == "" {
-		return errors.New("IP为空")
+		return consts.ErrIPIsEmpty
 	}
 	if net.ParseIP(req.IP) == nil {
-		return errors.New("IP无效")
+		return consts.ErrIpIsInvalid
 	}
 	return nil
 }
@@ -43,7 +44,23 @@ type ListBlackListReq struct {
 
 func (req *ListBlackListReq) Validate() error {
 	if req.ShortUrl == "" {
-		return errors.New("短链为空")
+		return consts.ErrShortURLIsEmpty
+	}
+	return nil
+}
+
+type UpdateBlackListReq struct {
+	ID       uint64 `json:"id"`
+	Status   int    `json:"status"`
+	ShortURL string `json:"shortUrl"`
+}
+
+func (req *UpdateBlackListReq) Validate() error {
+	if req.ID == 0 {
+		return errors.New("id 为空")
+	}
+	if req.ShortURL == "" {
+		return consts.ErrShortURLIsEmpty
 	}
 	return nil
 }

@@ -9,11 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// 黑名单
+// SlBlackList 黑名单
 type SlBlackList struct {
 	Id        uint64 `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"`
 	ShortURL  string `gorm:"column:short_url;type:varchar(50);comment:短链;NOT NULL" json:"shortUrl"`
-	IP        uint32 `gorm:"column:IP;type:bigint(20) unsigned;comment:IP" json:"IP"`
+	IP        uint32 `gorm:"column:ip;type:bigint(20) unsigned;comment:IP" json:"ip"`
+	Status    int    `gorm:"column:status;type:tinyint(4) unsigned;comment:状态 0 禁用 1 启用" json:"status"`
 	CreatedAt int64  `gorm:"column:created_at;type:bigint(20);NOT NULL" json:"createdAt"`
 	UpdatedAt int64  `gorm:"column:updated_at;type:bigint(20);NOT NULL" json:"updatedAt"`
 }
@@ -65,7 +66,7 @@ func (m *SlBlackListDao) List(shortURL string, ip uint32, page, pageSize int) ([
 	query := m.db.Table((&SlBlackList{}).TableName()).
 		Where("short_url = ?", shortURL)
 	if ip > 0 {
-		query = query.Where("IP = ?", ip)
+		query = query.Where("ip = ?", ip)
 	}
 	err := query.Order("id DESC").
 		Count(&count).
@@ -82,7 +83,7 @@ func (m *SlBlackListDao) Delete(id uint64) error {
 	return err
 }
 
-func (m *SlBlackListDao) DeleteByshortURL(shortURL string) error {
+func (m *SlBlackListDao) DeleteByShortURL(shortURL string) error {
 	err := m.db.Table((&SlBlackList{}).TableName()).
 		Where("short_url = ?", shortURL).
 		Delete(&SlBlackList{}).Error
@@ -95,9 +96,20 @@ func (m *SlBlackListDao) GetByID(id uint64) (*SlBlackList, error) {
 		Where("id = ?", id).First(&res).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return &res, nil
 		}
 		return nil, err
 	}
 	return &res, err
+}
+
+func (m *SlBlackListDao) UpdateByID(id uint64, data map[string]any, db ...*gorm.DB) error {
+	tx := m.db
+	if len(db) > 0 {
+		tx = db[0]
+	}
+	err := tx.Table((&SlBlackList{}).TableName()).
+		Where("id = ? ", id).
+		Updates(data).Error
+	return err
 }

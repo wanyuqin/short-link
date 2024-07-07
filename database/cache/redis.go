@@ -83,6 +83,14 @@ func (tool *RedisTool) Del(ctx context.Context, key ...string) (int64, error) {
 	return tool.rdb.Del(ctx, key...).Result()
 }
 
+func (tool *RedisTool) Set(ctx context.Context, key string, value any) (string, error) {
+	return tool.rdb.Set(ctx, key, value, 0).Result()
+}
+
+func (tool *RedisTool) GetClient() *redis.Client {
+	return tool.rdb
+}
+
 func (tool *RedisTool) fetchFromSource(ctx context.Context, key string, fetch FetchFunc) (any, error) {
 	g := singleflight.Group{}
 

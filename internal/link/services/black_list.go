@@ -7,10 +7,14 @@ import (
 	"short-link/api/admin/request"
 	"short-link/api/admin/resopnse"
 	"short-link/ctxkit"
+	"short-link/database/mysql"
 	"short-link/internal/link/repository"
 	"short-link/logs"
 	"short-link/utils/netx"
 	"short-link/utils/timex"
+	"time"
+
+	"gorm.io/gorm"
 
 	"go.uber.org/zap"
 )
@@ -97,11 +101,11 @@ func (svc *BlackListService) DeleteBlackList(ctx context.Context, id uint64) err
 func (svc *BlackListService) ListBlackList(ctx context.Context, req *request.ListBlackListReq) (*resopnse.ListBlackListResp, error) {
 	logFmt := "[BlackListService][DeleteBlackList]"
 
-	IP, err := netx.IPToInt(req.IP)
+	ip, err := netx.IPToInt(req.IP)
 	if err != nil {
 		return nil, err
 	}
-	blackList, total, err := svc.blackListRepo.PageBlackList(ctx, req.ShortUrl, IP, req.Page, req.PageSize)
+	blackList, total, err := svc.blackListRepo.PageBlackList(ctx, req.ShortUrl, ip, req.Page, req.PageSize)
 	if err != nil {
 		logs.Error(err, logFmt+"list black list failed")
 		return nil, err
@@ -114,6 +118,7 @@ func (svc *BlackListService) ListBlackList(ctx context.Context, req *request.Lis
 			ID:        item.Id,
 			ShortUrl:  item.ShortURL,
 			IP:        IPStr,
+			Status:    item.Status,
 			CreatedAt: timex.FormatDateTime(item.CreatedAt),
 		})
 	}
@@ -122,4 +127,28 @@ func (svc *BlackListService) ListBlackList(ctx context.Context, req *request.Lis
 		Data:  data,
 		Total: total,
 	}, nil
+}
+
+func (svc *BlackListService) UpdateBlackListStatus(ctx context.Context, req *request.UpdateBlackListReq) error {
+	logFmt := "[BlackListService][UpdateBlackListStatus]"
+	db := mysql.NewDBClient(ctx)
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		if err := svc.blackListRepo.UpdateByID(ctx, req.ID, map[string]any{
+			"status":     req.Status,
+			"updated_at": time.Now().UnixMilli(),
+		}, tx); err != nil {
+			return err
+		}
+		// 更新缓存
+		if err := svc.blackListRepo.RefreshCache(ctx, req.ShortURL); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		logs.Error(err, logFmt+"update black list status failed")
+	}
+	return err
 }

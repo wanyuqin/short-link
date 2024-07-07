@@ -13,8 +13,8 @@ import (
 
 type SlLink struct {
 	ID        uint64 `gorm:"column:id;primary_key;AUTO_INCREMENT" json:"id,omitempty"`
-	OriginURL string `gorm:"column:origin_url;NOT NULL" json:"originURL,omitempty"`           // 原始链接
-	ShortURL  string `gorm:"column:short_url;NOT NULL" json:"shortURL,omitempty"`             // 短链
+	OriginURL string `gorm:"column:origin_url;NOT NULL" json:"originUrl,omitempty"`           // 原始链接
+	ShortURL  string `gorm:"column:short_url;NOT NULL" json:"shortUrl,omitempty"`             // 短链
 	ExpiredAt int64  `gorm:"column:expired_at;default:0;NOT NULL" json:"expiredAt,omitempty"` // 过期时间
 	UserID    uint64 `gorm:"column:user_id;default:0;NOT NULL" json:"userId,omitempty"`       // 用户ID
 	CreatedAt int64  `gorm:"column:created_at;default:0;NOT NULL" json:"createdAt,omitempty"` // 创建时间

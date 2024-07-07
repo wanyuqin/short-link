@@ -83,3 +83,21 @@ func (ctl *BlackListController) ListBlackList(c *gin.Context) {
 	ctl.Response(c, resp)
 	return
 }
+
+func (ctl *BlackListController) UpdateBlackListStatus(c *gin.Context) {
+	var req request.UpdateBlackListReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctl.ParamException(c, err)
+		return
+	}
+	if err := req.Validate(); err != nil {
+		ctl.ParamException(c, err)
+		return
+	}
+	if err := services.NewBlackListService().UpdateBlackListStatus(c.Request.Context(), &req); err != nil {
+		ctl.Error(c, err)
+		return
+	}
+	ctl.Response(c, gin.H{})
+
+}

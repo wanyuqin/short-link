@@ -42,7 +42,7 @@ type DelLinkReq struct {
 
 func (req *DelLinkReq) Validate() error {
 	if req.ShortUrl == "" {
-		return errors.New("短链为空")
+		return consts.ErrShortURLIsEmpty
 	}
 	return nil
 }

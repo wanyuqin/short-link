@@ -18,3 +18,6 @@ linters:
   enable-all: true  # 启用所有 linters
   disable:
     - exhaustivestruct  # 禁用指定的 linter
+    - errorlint
+    - wrapcheck
+    - testpackage

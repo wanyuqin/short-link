@@ -9,5 +9,6 @@ type BlackList struct {
 	ID        uint64 `json:"id,omitempty"`
 	ShortUrl  string `json:"shortUrl,omitempty"`
 	IP        string `json:"ip,omitempty"`
+	Status    int    `json:"status"`
 	CreatedAt string `json:"createdAt,omitempty"`
 }

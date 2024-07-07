@@ -1,8 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Button, Drawer, InputNumber, message, Modal, Space} from 'antd';
-import {delLink} from "@/services/short-link/link";
 import {ModalForm, ProTable} from '@ant-design/pro-components';
-import {addBlackList, delBlackList, listBlackList} from "@/services/short-link/blacklist";
+import {addBlackList, delBlackList, listBlackList, updateBlackList} from "@/services/short-link/blacklist";
 import {PlusOutlined} from "@ant-design/icons";
 
 // 定义传入值
@@ -24,7 +23,17 @@ const columns = [
     },
     {
         title: "IP",
-        dataIndex: "IP",
+        dataIndex: "ip",
+    },
+    {
+        title: "状态",
+        dataIndex: "status",
+        onFilter: true,
+        ellipsis: true,
+        valueEnum: {
+            1: {text: '启用', status: 'Success'},
+            0: {text: '禁用', status: 'Error'},
+        },
     },
     {
         title: "创建时间",
@@ -57,6 +66,19 @@ const columns = [
             }}>
                 删除
             </a>,
+            <a onClick={async () => {
+                // 根据状态执行启用或禁用操作
+                const newStatus = record.status === 0 ? 1 : 0;
+                const res = await updateBlackList({"id": record?.id, "status": newStatus, "shortUrl": record.shortUrl});
+                if (res.code === 200) {
+                    message.success(newStatus === 0 ? "已启用" : "已禁用");
+                    action?.reloadAndRest();
+                } else {
+                    message.error(res.msg);
+                }
+            }}>
+                {record.status === 0 ? "启用" : "禁用"}
+            </a>
         ],
     }
 ]
