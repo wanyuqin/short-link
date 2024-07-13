@@ -17,22 +17,27 @@ type IBlackListRepository interface {
 	AddBlackList(ctx context.Context, shortURL string, IP uint32) error
 	GetByID(ctx context.Context, id uint64) (*db.SlBlackList, error)
 	Delete(ctx context.Context, id uint64) error
-	PageBlackList(ctx context.Context, shortURL string, IP uint32, page, pageSize int) ([]*db.SlBlackList, int64, error)
+	PageBlackList(ctx context.Context, shortURL string, IP uint32, status int, page, pageSize int) ([]*db.SlBlackList, int64, error)
 	GetByShortUrl(ctx context.Context, shortURL string) ([]*db.SlBlackList, error)
 	GetBlackListWithCache(ctx context.Context, shortUrl string) (domain.BlackLists, error)
 	UpdateByID(ctx context.Context, id uint64, data map[string]any, tx ...*gorm.DB) error
-	RefreshCache(ctx context.Context, shortURL string) error
+	RefreshCache(ctx context.Context, shortURL, ip string, status int) error
 }
 
 type BlackListRepository struct {
 }
 
-func (b BlackListRepository) RefreshCache(ctx context.Context, shortURL string) error {
+func (b BlackListRepository) RefreshCache(ctx context.Context, shortURL, ip string, status int) error {
 	redisKey := fmt.Sprintf(consts.RedisKeyShortURLBlackList, shortURL)
 	rdb := cache.NewRedisTool(ctx)
 	blackLists, err := b.GetByShortUrl(ctx, shortURL)
 	if err != nil {
 		return err
+	}
+	for _, item := range blackLists {
+		if netx.IntToIP(item.IP) == ip {
+			item.Status = status
+		}
 	}
 	list := DBModelToDomain(blackLists)
 	bytes, err := json.Marshal(list)
@@ -49,15 +54,17 @@ func (b BlackListRepository) GetBlackListWithCache(ctx context.Context, shortUrl
 		rdb       = cache.NewRedisTool(ctx)
 		redisKey  = fmt.Sprintf(consts.RedisKeyShortURLBlackList, shortUrl)
 	)
+	result, err := rdb.GetClient().SMembers(ctx, redisKey).Result()
+	if err != nil {
+		return nil, err
+	}
 
-	err := rdb.AutoFetch(ctx, redisKey, 0, &blacklist, func(ctx context.Context) (any, error) {
-		bl, err := b.GetByShortUrl(ctx, shortUrl)
-		if err != nil {
-			return nil, err
-		}
-		list := DBModelToDomain(bl)
-		return list, nil
-	})
+	for _, item := range result {
+		blacklist = append(blacklist, domain.BlackList{
+			IP:     item,
+			Status: consts.IPStatusActive,
+		})
+	}
 	return blacklist, err
 }
 
@@ -76,8 +83,8 @@ func (b BlackListRepository) Delete(ctx context.Context, id uint64) error {
 	return db.NewSlBlackListDao(ctx).Delete(id)
 }
 
-func (b BlackListRepository) PageBlackList(ctx context.Context, shortUrl string, ip uint32, page, pageSize int) ([]*db.SlBlackList, int64, error) {
-	return db.NewSlBlackListDao(ctx).List(shortUrl, ip, page, pageSize)
+func (b BlackListRepository) PageBlackList(ctx context.Context, shortUrl string, ip uint32, status int, page, pageSize int) ([]*db.SlBlackList, int64, error) {
+	return db.NewSlBlackListDao(ctx).List(shortUrl, ip, status, page, pageSize)
 }
 
 func (b BlackListRepository) GetByShortUrl(ctx context.Context, shortUrl string) ([]*db.SlBlackList, error) {

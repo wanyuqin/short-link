@@ -10,6 +10,5 @@ all: fmt
 # Format Go files with goimports
 fmt:
 	@echo "Formatting Go files with goimports..."
-	@$(foreach dir,$(SRC_DIRS),goimports -w $(wildcard $(dir)/*.go);)
+	@./script/import.sh $(SRC_DIRS)
 	@echo "Go files formatted."
-

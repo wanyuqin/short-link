@@ -40,6 +40,7 @@ type ListBlackListReq struct {
 	PageReq
 	ShortUrl string `json:"shortUrl"`
 	IP       string `json:"ip"`
+	Status   int    `json:"status"`
 }
 
 func (req *ListBlackListReq) Validate() error {
@@ -51,6 +52,7 @@ func (req *ListBlackListReq) Validate() error {
 
 type UpdateBlackListReq struct {
 	ID       uint64 `json:"id"`
+	Ip       string `json:"ip"`
 	Status   int    `json:"status"`
 	ShortURL string `json:"shortUrl"`
 }

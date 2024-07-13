@@ -60,13 +60,16 @@ func (m *SlBlackListDao) GetByShortURL(shortURL string) ([]*SlBlackList, error) 
 	return res, nil
 }
 
-func (m *SlBlackListDao) List(shortURL string, ip uint32, page, pageSize int) ([]*SlBlackList, int64, error) {
+func (m *SlBlackListDao) List(shortURL string, ip uint32, status int, page, pageSize int) ([]*SlBlackList, int64, error) {
 	var res []*SlBlackList
 	var count int64
 	query := m.db.Table((&SlBlackList{}).TableName()).
 		Where("short_url = ?", shortURL)
 	if ip > 0 {
 		query = query.Where("ip = ?", ip)
+	}
+	if status >= 0 {
+		query = query.Where("status = ?", status)
 	}
 	err := query.Order("id DESC").
 		Count(&count).

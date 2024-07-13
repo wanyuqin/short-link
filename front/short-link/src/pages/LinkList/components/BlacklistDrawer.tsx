@@ -69,9 +69,9 @@ const columns = [
             <a onClick={async () => {
                 // 根据状态执行启用或禁用操作
                 const newStatus = record.status === 0 ? 1 : 0;
-                const res = await updateBlackList({"id": record?.id, "status": newStatus, "shortUrl": record.shortUrl});
+                const res = await updateBlackList({"id": record?.id, "status": newStatus, "shortUrl": record.shortUrl, "ip": record.ip});
                 if (res.code === 200) {
-                    message.success(newStatus === 0 ? "已启用" : "已禁用");
+                    message.success(newStatus === 0 ? "已禁用" : "已启用");
                     action?.reloadAndRest();
                 } else {
                     message.error(res.msg);
@@ -99,8 +99,8 @@ const BlacklistDrawer: React.FC<BlacklistDrawerProps> = ({visible, onClose, shor
 
     // 黑名单列表
     const fetchBlackList = async (params) => {
-        const {pageSize, page, IP} = params
-        const res = await listBlackList({page, pageSize, IP, shortUrl})
+        const {pageSize, page, ip, status} = params
+        const res = await listBlackList({page, pageSize, ip, shortUrl, status})
         const {data: nestedData, total: total} = res.data;
         return {
             data: nestedData,
@@ -148,9 +148,12 @@ const BlacklistDrawer: React.FC<BlacklistDrawerProps> = ({visible, onClose, shor
                     pageSize: number;
                     current: number;
                 }) => {
+                    const status = params.status ? parseInt(params.status, 10) : -1;
                     const response = await fetchBlackList({
                         page: params.current,
                         pageSize: params.pageSize,
+                        ip: params.ip,
+                        status: status
                     })
                     console.log(response)
                     return response

@@ -8,8 +8,12 @@ import (
 	"short-link/api/admin/resopnse"
 	"short-link/ctxkit"
 	"short-link/database/mysql"
+	"short-link/internal/consts"
+	"short-link/internal/link/event"
 	"short-link/internal/link/repository"
 	"short-link/logs"
+	"short-link/pkg/bus"
+	"short-link/utils/gox"
 	"short-link/utils/netx"
 	"short-link/utils/timex"
 	"time"
@@ -95,6 +99,13 @@ func (svc *BlackListService) DeleteBlackList(ctx context.Context, id uint64) err
 	if err != nil {
 		logs.Error(err, logFmt+"delete failed")
 	}
+	// 发送黑名单删除消息
+	gox.Run(context.Background(), func(ctx context.Context) {
+		err = bus.GetEventBus().Publish(ctx, consts.DeleteBlackListEvent, event.DeleteBlackListEventMsg{ShortURL: blackList.ShortURL, Ip: netx.IntToIP(blackList.IP)})
+		if err != nil {
+			logs.Error(err, logFmt+"publish delete short url black failed", zap.Any("blacklist", blackList))
+		}
+	})
 	return err
 }
 
@@ -105,7 +116,7 @@ func (svc *BlackListService) ListBlackList(ctx context.Context, req *request.Lis
 	if err != nil {
 		return nil, err
 	}
-	blackList, total, err := svc.blackListRepo.PageBlackList(ctx, req.ShortUrl, ip, req.Page, req.PageSize)
+	blackList, total, err := svc.blackListRepo.PageBlackList(ctx, req.ShortUrl, ip, req.Status, req.Page, req.PageSize)
 	if err != nil {
 		logs.Error(err, logFmt+"list black list failed")
 		return nil, err
@@ -140,15 +151,22 @@ func (svc *BlackListService) UpdateBlackListStatus(ctx context.Context, req *req
 		}, tx); err != nil {
 			return err
 		}
-		// 更新缓存
-		if err := svc.blackListRepo.RefreshCache(ctx, req.ShortURL); err != nil {
-			return err
-		}
 		return nil
 	})
 
 	if err != nil {
 		logs.Error(err, logFmt+"update black list status failed")
 	}
+
+	// 发送更新消息
+	gox.Run(context.Background(), func(ctx context.Context) {
+		if err := bus.GetEventBus().Publish(ctx, consts.UpdateBlackListStatusEvent, event.UpdateBlackListStatusEventMsg{
+			ShortURL: req.ShortURL,
+			Ip:       req.Ip,
+			Status:   req.Status,
+		}); err != nil {
+			logs.Error(err, logFmt+"publish short url blacklist status updated failed", zap.Any("req", req))
+		}
+	})
 	return err
 }

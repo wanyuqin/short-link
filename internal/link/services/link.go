@@ -196,7 +196,7 @@ func (svc *LinkService) DeleteLink(ctx context.Context, req *request.DelLinkReq)
 		return err
 	}
 	gox.Run(context.Background(), func(ctx context.Context) {
-		if err := bus.GetEventBus().Publish(ctx, consts.DeleteShortURLEvent, req.ShortUrl); err != nil {
+		if err = bus.GetEventBus().Publish(ctx, consts.DeleteShortURLEvent, req.ShortUrl); err != nil {
 			logs.Error(err, logFmt+fmt.Sprintf("publish %s event failed", consts.DeleteShortURLEvent))
 		}
 	})

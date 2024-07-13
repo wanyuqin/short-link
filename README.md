@@ -28,8 +28,8 @@
 * 创建user_id -> short_url 索引表
 * 创建original索引表
 
-
 ### 短链表
+
 ```sql  
 CREATE TABLE sl_link_0
 (
@@ -41,8 +41,8 @@ CREATE TABLE sl_link_0
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -58,8 +58,8 @@ CREATE TABLE sl_link_1
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -75,8 +75,8 @@ CREATE TABLE sl_link_2
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -92,8 +92,8 @@ CREATE TABLE sl_link_3
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -109,8 +109,8 @@ CREATE TABLE sl_link_4
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -126,8 +126,8 @@ CREATE TABLE sl_link_5
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -143,8 +143,8 @@ CREATE TABLE sl_link_6
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -160,8 +160,8 @@ CREATE TABLE sl_link_7
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -177,8 +177,8 @@ CREATE TABLE sl_link_8
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
@@ -194,32 +194,33 @@ CREATE TABLE sl_link_9
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
     is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE     KEY idx_origin_url (origin_url),
-    UNIQUE     KEY idx_short_url (short_url),
+    UNIQUE KEY idx_origin_url (origin_url),
+    UNIQUE KEY idx_short_url (short_url),
     INDEX      idx_user_id (user_id),
     INDEX      idx_created_at (created_at),
     INDEX      idx_updated_at (updated_at)
 ) COMMENT '短链接表 9';
 
 ```
+
 ### 短链用户映射表
 
 ```sql
-CREATE TABLE sl_user_short_url (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    short_url VARCHAR(50) NOT NULL COMMENT '短链',
-    user_id BIGINT UNSIGNED DEFAULT 0 NOT NULL COMMENT '用户ID',
+CREATE TABLE sl_user_short_url
+(
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    short_url  VARCHAR(50)      NOT NULL COMMENT '短链',
+    user_id    BIGINT UNSIGNED DEFAULT 0 NOT NULL COMMENT '用户ID',
     created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
     updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
-    is_del INT DEFAULT 0 NOT NULL COMMENT '删除标志',
-    INDEX idx_user_id (user_id),
+    is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
+    INDEX      idx_user_id (user_id),
     UNIQUE idx_short_url (short_url),
-    INDEX idx_created_at (created_at),
-    INDEX idx_updated_at (updated_at)
+    INDEX      idx_created_at (created_at),
+    INDEX      idx_updated_at (updated_at)
 ) COMMENT '用户短链接表';
 
 ```
-
 
 ### 短链-原始链接表
 
@@ -227,23 +228,24 @@ CREATE TABLE sl_user_short_url (
 
 CREATE TABLE sl_original_short_url
 (
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    short_url    VARCHAR(50)      NOT NULL COMMENT '短链',
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    short_url  VARCHAR(50)      NOT NULL COMMENT '短链',
     origin_url VARCHAR(255)     NOT NULL COMMENT '原始链接',
-    created_at   BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
-    updated_at   BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
-    is_del       INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
-    UNIQUE       idx_short_url (short_url),
-    UNIQUE       idx_origin_url (origin_url),
-    INDEX        idx_created_at (created_at),
-    INDEX        idx_updated_at (updated_at)
+    created_at BIGINT DEFAULT 0 NOT NULL COMMENT '创建时间',
+    updated_at BIGINT DEFAULT 0 NOT NULL COMMENT '更新时间',
+    is_del     INT    DEFAULT 0 NOT NULL COMMENT '删除标志',
+    UNIQUE idx_short_url (short_url),
+    UNIQUE idx_origin_url (origin_url),
+    INDEX      idx_created_at (created_at),
+    INDEX      idx_updated_at (updated_at)
 ) COMMENT '短链与原始链接表';
 
 ```
 
+## TODO
 
-## TODO 
 * 黑名单
 * 限流
 * 本地缓存（？）
 * 前端适配
+* 调整启动

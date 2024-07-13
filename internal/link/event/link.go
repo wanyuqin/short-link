@@ -7,7 +7,7 @@ import (
 	"short-link/internal/consts"
 )
 
-func DeleteShortUrl(ctx context.Context, shortUrl string) error {
+func DeleteShortUrlEvent(ctx context.Context, shortUrl string) error {
 	if shortUrl == "" {
 		return fmt.Errorf("short url is empty")
 	}
