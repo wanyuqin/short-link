@@ -5,17 +5,27 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"short-link/config"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/singleflight"
+
+	"short-link/config"
+	"short-link/utils/valuex"
 )
 
 var (
 	defaultDbName = "default"
 
 	redisMap = make(map[string]*RedisTool)
+)
+
+const (
+	defaultPoolSize     = 10
+	defaultMinIdleConns = 5
+	defaultDialTimeout  = 5 * time.Second
+	defaultReadTimeout  = 3 * time.Second
+	defaultWriteTimeout = 3 * time.Second
 )
 
 type RedisTool struct {
@@ -30,14 +40,18 @@ func InitializeRedisClient() {
 	}
 }
 
-// TODO redis链接池配置
 func NewRedis(redisCfg config.Redis) *RedisTool {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", redisCfg.Host, redisCfg.Port),
-		Password: redisCfg.Password,
-		DB:       redisCfg.DB,
-	})
-
+	opt := &redis.Options{
+		Addr:         fmt.Sprintf("%s:%d", redisCfg.Host, redisCfg.Port),
+		Password:     redisCfg.Password,
+		DB:           redisCfg.DB,
+		PoolSize:     valuex.GetOrDefault(redisCfg.PoolSize, defaultPoolSize),
+		MinIdleConns: valuex.GetOrDefault(redisCfg.MinIdleConns, defaultMinIdleConns),
+		DialTimeout:  valuex.GetDurationOrDefault(redisCfg.DialTimout, defaultDialTimeout),
+		ReadTimeout:  valuex.GetDurationOrDefault(redisCfg.ReadTimeout, defaultReadTimeout),
+		WriteTimeout: valuex.GetDurationOrDefault(redisCfg.WriteTimeout, defaultWriteTimeout),
+	}
+	rdb := redis.NewClient(opt)
 	tool := &RedisTool{
 		rdb: rdb,
 	}

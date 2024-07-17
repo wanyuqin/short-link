@@ -8,6 +8,7 @@ import (
 	"short-link/database/mysql"
 	"short-link/internal/consts"
 	"short-link/internal/link/repository/db"
+	"short-link/pkg/hot_key"
 	"short-link/utils/gox"
 	"sync"
 
@@ -30,22 +31,27 @@ type LinkRepository struct {
 
 func (l LinkRepository) GetByShortWithCache(ctx context.Context, shortUrl string) (*db.SlLink, error) {
 	var (
-		rdb      = cache.NewRedisTool(ctx)
 		redisKey = fmt.Sprintf(consts.RedisKeyShorURL, shortUrl)
-		res      = db.SlLink{}
+		link     = db.SlLink{}
 	)
+	fetchFunc := func(ctx context.Context, key any) (any, error) {
+		rdb := cache.NewRedisTool(ctx)
+		res := db.SlLink{}
+		err := rdb.AutoFetch(ctx, redisKey, 0, &res, func(ctx context.Context) (any, error) {
+			short, err := l.GetByShort(ctx, shortUrl)
+			if err != nil {
+				return nil, err
+			}
+			if short == nil {
+				return nil, errors.New("record not found")
+			}
+			return short, nil
+		})
+		return res, err
+	}
+	err := hot_key.GetHotKeyTool().Fetch(ctx, redisKey, &link, fetchFunc)
 
-	err := rdb.AutoFetch(ctx, redisKey, 0, &res, func(ctx context.Context) (any, error) {
-		short, err := l.GetByShort(ctx, shortUrl)
-		if err != nil {
-			return nil, err
-		}
-		if short == nil {
-			return nil, errors.New("record not found")
-		}
-		return short, nil
-	})
-	return &res, err
+	return &link, err
 }
 
 func (l LinkRepository) DeleteByShort(ctx context.Context, shortUrl string) error {
