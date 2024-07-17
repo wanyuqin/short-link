@@ -48,6 +48,7 @@ func (b BlackListRepository) RefreshCache(ctx context.Context, shortURL, ip stri
 	return err
 }
 
+// todo hot key
 func (b BlackListRepository) GetBlackListWithCache(ctx context.Context, shortUrl string) (domain.BlackLists, error) {
 	var (
 		blacklist domain.BlackLists

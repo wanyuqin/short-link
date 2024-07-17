@@ -2,6 +2,7 @@ package hot_key
 
 import (
 	"short-link/config"
+	"sort"
 	"sync"
 )
 
@@ -35,9 +36,11 @@ func (m *SlidingWindowManager) AddAccess(key string, timestamp int64) {
 
 	window.timestamps = append(window.timestamps, timestamp)
 	cutoff := timestamp - int64(config.GetConfig().HotKey.Interval)
-	for len(window.timestamps) > 0 && window.timestamps[0] < cutoff {
-		window.timestamps = window.timestamps[1:]
-	}
+	// 使用二分查找优化过期时间戳的移除
+	idx := sort.Search(len(window.timestamps), func(i int) bool {
+		return window.timestamps[i] >= cutoff
+	})
+	window.timestamps = window.timestamps[idx:]
 }
 
 func (m *SlidingWindowManager) ExceedsThreshold(key string) bool {
