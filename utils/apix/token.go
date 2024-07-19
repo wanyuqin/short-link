@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"short-link/internal/consts"
 	"short-link/logs"
+	"short-link/utils/timex"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -12,6 +14,7 @@ func GetToken(id uint64, username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId":   id,
 		"username": username,
+		"expire":   timex.GetDayOfStart(time.Now()).AddDate(0, 0, 7*24),
 	})
 
 	tokenString, err := token.SignedString([]byte(consts.TokenSecret))
@@ -25,7 +28,7 @@ func ParseToken(tokenString string) (map[string]any, error) {
 	m := make(map[string]any)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(consts.TokenSecret), nil
 	})

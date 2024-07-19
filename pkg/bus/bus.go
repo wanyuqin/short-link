@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"short-link/utils/gox"
 	"sync"
 )
 
@@ -62,21 +63,12 @@ func (bus *AsyncEventBus) AddEventListener(topic string, handler HandlerFunc) {
 }
 
 func callListeners(handlers []HandlerFunc, params []reflect.Value) error {
-	var (
-		wg   sync.WaitGroup
-		errs error
-	)
+	var errs error
+	wg := gox.NewWaitGroup()
 	errChan := make(chan error, len(handlers))
 	for _, handler := range handlers {
-		wg.Add(1)
-		go func(fn HandlerFunc) {
-			defer wg.Done()
-			defer func() {
-				if r := recover(); r != nil {
-					errChan <- fmt.Errorf("handler recover from panic: %v", r)
-				}
-			}()
-
+		fn := handler
+		wg.RunSafe(context.Background(), func(ctx context.Context) {
 			ret := reflect.ValueOf(fn).Call(params)
 			if len(ret) > 0 && !ret[0].IsNil() {
 				e := ret[0].Interface()
@@ -88,12 +80,11 @@ func callListeners(handlers []HandlerFunc, params []reflect.Value) error {
 					errChan <- fmt.Errorf("expected listener to return an error, got '%T'", e)
 				}
 			}
-		}(handler)
+		})
 	}
 
 	wg.Wait()
 	close(errChan)
-
 	for err := range errChan {
 		if err != nil {
 			errs = errors.Join(errs, err)

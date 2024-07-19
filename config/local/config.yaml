@@ -33,3 +33,6 @@ database:
       port: 6379
       db: 0
       password: ""
+hotkey:
+  interval: 3  # 时间间隔
+  threshold: 10 # 阈值
